@@ -45,7 +45,7 @@ exports.ver_ideia = (req, res) => {
                                 if (err4) {
                                     return res.status(403).send({ err: err4 }).end()
                                 } else {
-                                    let comentarios = rows4[0]
+                                    let comentarios = rows4
                                     database.query("SELECT * FROM curtida_ideia WHERE id_ideia = ?", id_ideia, (err5, rows5, fields5) => {
                                         if (err5) {
                                             return res.status(403).send({ err: "Erro ao buscar quantidade de curtidas" }).end()
