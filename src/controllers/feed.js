@@ -194,7 +194,7 @@ exports.feed = (req, res) => {
                                         // query para pegar quantidade de curtidas
                                         let sql2 = "SELECT id_ideia, id_usuario FROM curtida_ideia WHERE "
                                         // query para pegar quantidade de comentarios
-                                        let sql3 = "SELECT id_ideia, COUNT(*) as quantidade_comentario FROM tb_mensagem WHERE uso_mensagem = 2 AND ("
+                                        let sql3 = "SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.nm_usuario FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND ("
                                         // query para pegar as tecnologias de cada ideia
                                         let sql4 = "SELECT * FROM tecnologia_usada WHERE "                                        
                                                 
@@ -203,7 +203,7 @@ exports.feed = (req, res) => {
                                             if(count == ideias_pesquisadas.length - 1){
                                                 sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia
                                                 sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
-                                                sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ") GROUP BY id_ideia"
+                                                sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ")"
                                                 sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
                                             }else{
                                                 sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
@@ -227,7 +227,7 @@ exports.feed = (req, res) => {
                                                         return res.status(403).send({err: "Erro na busca das curtidas da ideia"}).end()
                                                     }else{
                                                         let curtidas_ideias = rows5
-                                                        // Saber quantidade de comentarios
+                                                        // Saber os comentarios
                                                         database.query(sql3, (err6, rows6, fields6) => {
                                                             if(err6){
                                                                 return res.status(403).send({err: "Erro na busca dos comentarios da ideia"}).end()
