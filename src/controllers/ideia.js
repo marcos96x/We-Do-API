@@ -52,7 +52,7 @@ exports.ver_ideia = (req, res) => {
                                         } else {
                                             let curtidas = rows5
 
-                                            ideia.tecnologia = rows2
+                                            ideia.tecnologias = rows2
                                             ideia.membros = rows3
                                             ideia.comentarios = comentarios
                                             ideia.curtidas = curtidas
