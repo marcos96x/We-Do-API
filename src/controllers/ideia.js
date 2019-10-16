@@ -224,22 +224,27 @@ exports.altera_dados = (req, res) => {
     let ds_ideia = req.body.ideia.ds_ideia
     let status_ideia = req.body.ideia.status_ideia
 
-    database.query("SELECT id_usuario FROM tb_ideia WHERE id_ideia = ?", id_ideia, (err2, rows2, fields2) => {
+    database.query("SELECT id_usuario FROM participante_ideia WHERE id_ideia = ? AND id_usuario = ? AND idealizador = 1", [id_ideia, id_usuario], (err2, rows2, fields2) => {
         if (err2) {
-            return res.status(403).send({ err: "Nao foi possivel comparar se voce é o idealizador" }).end()
+            return res.status(200).send({ err: "Nao foi possivel comparar se voce é o idealizador" }).end()
         } else {
-            if (rows2[0].id_usuario == id_usuario) {
-                database.query("UPDATE tb_ideia SET nm_ideia = ?, ds_ideia = ?, status_ideia = ? WHERE id_ideia = ?", [nm_ideia, ds_ideia, status_ideia, id_ideia], (err, rows, fields) => {
-                    if (err) {
-                        return res.status(403).send({ err: "Erro ao alterar dados da ideia" }).end()
-                    } else {
-                        let newToken = geraToken({ id: id_usuario })
-                        return res.status(200).send({ msg: "OK", token: newToken }).end()
-                    }
-                })
-            } else {
-                return res.status(401).send({ err: "Voce não é o idealizador" }).end()
+            if(rows2.length != []){
+                if (rows2[0].id_usuario == id_usuario) {
+                    database.query("UPDATE tb_ideia SET nm_ideia = ?, ds_ideia = ?, status_ideia = ? WHERE id_ideia = ?", [nm_ideia, ds_ideia, status_ideia, id_ideia], (err, rows, fields) => {
+                        if (err) {
+                            return res.status(200).send({ err: "Erro ao alterar dados da ideia" }).end()
+                        } else {
+                            let newToken = geraToken({ id: id_usuario })
+                            return res.status(200).send({ msg: "OK", token: newToken }).end()
+                        }
+                    })
+                } else {
+                    return res.status(200).send({ err: "Voce não é o idealizador" }).end()
+                }
+            }else{
+                return res.status(200).send({ err: "Voce não é o idealizador" }).end()
             }
+            
         }
     })
 }
