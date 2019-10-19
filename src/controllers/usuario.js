@@ -177,46 +177,50 @@ exports.cadastro = (req, res) => {
 exports.login = (req, res) => {    
     // Verifica se o email ta certo, senha está certo e se o usuario está apto para logar (status == 1)
     database.query("SELECT * FROM tb_usuario WHERE email_usuario = '" + req.body.usuario.email_usuario + "'", (err, rows, fields) => {
-        
-        if(rows.length != []){
-            if(req.body.usuario.email_usuario == rows[0].email_usuario){
-                // Verifica a senha
-                let password = req.body.usuario.senha_usuario
-                bcrypt.compare(password, rows[0].senha_usuario)
-                    .then((result) => {                        
-                        if(!result){
-                            return res.status(200).send({err: "Senha incorreta! Por favor, tente novamente"}).end()
-                        }else{    
-                            if(rows[0].status_usuario == 0){
-                                return res.status(200).send({err: "Você precisa verificar seu email!"}).end()
-                            }else{
-                                database.query("SELECT id_ultima_curtida, id_ultimo_comentario FROM tb_notificacao WHERE id_usuario = ?", [rows[0].id_usuario], (err2, rows2, fields2) => {
-                                    if(err2){
-                                        return res.status(200).send({err: err2}).end()
-                                    }else{
-                                        //Loga
-                                        let newToken = "Bearer " + geraToken({"id": rows[0].id_usuario})
-                                            
-                                        return res.status(200).send({
-                                            usuario: {
-                                                id_usuario : rows[0].id_usuario,
-                                                nm_usuario : rows[0].nm_usuario,
-                                                id_ultima_curtida : rows2[0].id_ultima_curtida,
-                                                id_ultimo_comentario : rows2[0].id_ultimo_comentario
-                                            },
-                                            token: newToken
-                                        }).end() 
-                                    }
-                                }) 
-                            }                                                                                  
-                        }                                              
-                });            
+        if(err){
+            return res.status(403).send({err: err}).end()
+        }else{
+            if(rows.length != []){
+                if(req.body.usuario.email_usuario == rows[0].email_usuario){
+                    // Verifica a senha
+                    let password = req.body.usuario.senha_usuario
+                    bcrypt.compare(password, rows[0].senha_usuario)
+                        .then((result) => {                        
+                            if(!result){
+                                return res.status(200).send({err: "Senha incorreta! Por favor, tente novamente"}).end()
+                            }else{    
+                                if(rows[0].status_usuario == 0){
+                                    return res.status(200).send({err: "Você precisa verificar seu email!"}).end()
+                                }else{
+                                    database.query("SELECT id_ultima_curtida, id_ultimo_comentario FROM tb_notificacao WHERE id_usuario = ?", [rows[0].id_usuario], (err2, rows2, fields2) => {
+                                        if(err2){
+                                            return res.status(200).send({err: err2}).end()
+                                        }else{
+                                            //Loga
+                                            let newToken = "Bearer " + geraToken({"id": rows[0].id_usuario})
+                                                
+                                            return res.status(200).send({
+                                                usuario: {
+                                                    id_usuario : rows[0].id_usuario,
+                                                    nm_usuario : rows[0].nm_usuario,
+                                                    id_ultima_curtida : rows2[0].id_ultima_curtida,
+                                                    id_ultimo_comentario : rows2[0].id_ultimo_comentario
+                                                },
+                                                token: newToken
+                                            }).end() 
+                                        }
+                                    }) 
+                                }                                                                                  
+                            }                                              
+                    });            
+                }else{
+                    return res.status(200).send({err: "Usuario não encontrado"}).end()
+                }
             }else{
                 return res.status(200).send({err: "Usuario não encontrado"}).end()
             }
-        }else{
-            return res.status(200).send({err: "Usuario não encontrado"}).end()
         }
+        
         
     })
 }
