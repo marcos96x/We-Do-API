@@ -123,11 +123,49 @@ exports.cria_ideia = (req, res) => {
                     insert += "(" + tecnologias_ideia[count] + ", " + id_nova_ideia + "), "
                 count++
             }
-
-            database.query("INSERT INTO tecnologia_ideia VALUES " + insert, (err2, rows2, fields2) => {
-                if (err2) {
-                    return res.status(403).send({ err: "Nao foi possivel inserir as tecnologias na ideia" }).end()
-                } else {
+            if (tecnologias_ideia.length != []) {
+                database.query("INSERT INTO tecnologia_ideia VALUES " + insert, (err2, rows2, fields2) => {
+                    if (err2) {
+                        return res.status(403).send({ err: "Nao foi possivel inserir as tecnologias na ideia" }).end()
+                    } else {
+                        if (tags_ideia.length != []) {
+                            let insert2 = ""
+                            for (let i = 0; i < tags_ideia.length; i++) {
+                                if (i == tags_ideia.length - 1) {
+                                    insert2 += "(default, '" + tags_ideia[i] + "', " + id_nova_ideia + ");"
+                                }
+                                else {
+                                    insert2 += "(default, '" + tags_ideia[i] + "', " + id_nova_ideia + "), "
+                                }
+                            }
+                            database.query("INSERT INTO tb_tag_ideia VALUES " + insert2, (err3, rows3, fields3) => {
+                                if (err3) {
+                                    return res.status(403).send({ err: err3 }).end()
+                                } else {
+                                    database.query("INSERT INTO participante_ideia VALUES (?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
+                                        if (err4) {
+                                            return res.status(403).send({ err: err4 }).end()
+                                        } else {
+                                            let newToken = geraToken({ id: id_usuario })
+                                            return res.status(200).send({ msg: "Ok", token: newToken }).end()
+                                        }
+                                    })
+                                }
+                            })
+                        } else {
+                            database.query("INSERT INTO participante_ideia VALUES (?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
+                                if (err4) {
+                                    return res.status(403).send({ err: err4 }).end()
+                                } else {
+                                    let newToken = geraToken({ id: id_usuario })
+                                    return res.status(200).send({ msg: "Ok", token: newToken }).end()
+                                }
+                            })
+                        }
+                    }
+                })
+            } else {
+                if (tags_ideia.length != []) {
                     let insert2 = ""
                     for (let i = 0; i < tags_ideia.length; i++) {
                         if (i == tags_ideia.length - 1) {
@@ -151,8 +189,19 @@ exports.cria_ideia = (req, res) => {
                             })
                         }
                     })
+                } else {
+                    database.query("INSERT INTO participante_ideia VALUES (?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
+                        if (err4) {
+                            return res.status(403).send({ err: err4 }).end()
+                        } else {
+                            let newToken = geraToken({ id: id_usuario })
+                            return res.status(200).send({ msg: "Ok", token: newToken }).end()
+                        }
+                    })
                 }
-            })
+            }
+
+
         }
     })
 }
@@ -228,7 +277,7 @@ exports.altera_dados = (req, res) => {
         if (err2) {
             return res.status(200).send({ err: "Nao foi possivel comparar se voce é o idealizador" }).end()
         } else {
-            if(rows2.length != []){
+            if (rows2.length != []) {
                 if (rows2[0].id_usuario == id_usuario) {
                     database.query("UPDATE tb_ideia SET nm_ideia = ?, ds_ideia = ?, status_ideia = ? WHERE id_ideia = ?", [nm_ideia, ds_ideia, status_ideia, id_ideia], (err, rows, fields) => {
                         if (err) {
@@ -241,10 +290,10 @@ exports.altera_dados = (req, res) => {
                 } else {
                     return res.status(200).send({ err: "Voce não é o idealizador" }).end()
                 }
-            }else{
+            } else {
                 return res.status(200).send({ err: "Voce não é o idealizador" }).end()
             }
-            
+
         }
     })
 }
@@ -427,23 +476,23 @@ exports.projetos_atuais = (req, res) => {
                 }
                 count++
             }
-            if(rows.length == []){
-                return res.status(200).send({msg: "Você não participa de nenhuma ideia"}).end()
-            }else{
+            if (rows.length == []) {
+                return res.status(200).send({ msg: "Você não participa de nenhuma ideia" }).end()
+            } else {
                 database.query(sql, (err2, rows2, fields2) => {
                     if (err2) {
                         return res.status(403).send({ err: "Nao foi possivel pesquisar ideias na qual vc participa" }).end()
                     } else {
                         let ideias_atrelado = rows2
                         database.query(sql2, (err3, rows3, fields3) => {
-                            if(err3){
-                                return res.status(403).send({err: err3}).end()
-                            }else{
+                            if (err3) {
+                                return res.status(403).send({ err: err3 }).end()
+                            } else {
                                 let membros = rows3
-                                for(let i = 0; i < ideias_atrelado.length; i++){
+                                for (let i = 0; i < ideias_atrelado.length; i++) {
                                     ideias_atrelado[i].membros = []
-                                    for(let i2 = 0; i2 < membros.length; i2++){
-                                        if(ideias_atrelado[i].id_ideia == membros[i2].id_ideia){
+                                    for (let i2 = 0; i2 < membros.length; i2++) {
+                                        if (ideias_atrelado[i].id_ideia == membros[i2].id_ideia) {
                                             ideias_atrelado[i].membros.push(membros[i2])
                                         }
                                     }
@@ -452,10 +501,10 @@ exports.projetos_atuais = (req, res) => {
                                 return res.status(200).send({ ideias: ideias_atrelado, token: newToken }).end()
                             }
                         })
-                        
+
                     }
                 })
-            }            
+            }
         }
     })
 }

@@ -2,6 +2,8 @@
 module.exports = app => {
     const controllerTecnologia = require("../controllers/tecnologia")
     const authMiddleware = require("../middlewares/auth") 
+ 
+
 
     app.get("/tecnologia", controllerTecnologia.busca_tecnologia)
 
@@ -9,4 +11,5 @@ module.exports = app => {
     
     app.post("/tecnologia/ideia", [controllerTecnologia.tecnologia_ideia])
 
+ 
 }

@@ -22,18 +22,16 @@ function geraToken(params = {}){
 /**
  * Mostra todas as mensagens de um determinado chat
  * 
- * @param id_usuario
+ * @param id_usuario&id_ideia
  * 
- * @body ideia: {
- *          "id_ideia": id_da_ideia
- *       }
+ * @body void
  *
  * @return JSON {chat, token}  / JSON {err}
  */
 exports.recebe_mensagem = (req, res) => {
-
-    let id_ideia = req.body.ideia.id_ideia
+    let id_ideia = req.params.id_ideia
     let id_usuario = req.params.id_usuario
+
     
     database.query("CALL spVisualiza_chat(?, ?)", [id_ideia, id_usuario], (err, rows, fields) => {
         if(err){
@@ -52,7 +50,7 @@ exports.recebe_mensagem = (req, res) => {
 /**
  * Efetua o envio da mensagem em determinado chat
  * 
- * @param id_usuario
+ * @param id_usuario&id_ideia
  * 
  * @body  "mensagem": {
      *      "ct_mensagem": "conteúdo"
@@ -66,7 +64,7 @@ exports.recebe_mensagem = (req, res) => {
 exports.envia_mensagem = (req, res) => {
     let ct_mensagem = req.body.mensagem.ct_mensagem
     let id_usuario = req.params.id_usuario
-    let id_ideia = req.body.ideia.id_ideia
+    let id_ideia = req.params.id_ideia
     
     database.query("CALL spInsere_chat(?, ?, ?)", [id_usuario, id_ideia, ct_mensagem], (err, rows, fields) => {
         if(err){
