@@ -194,7 +194,7 @@ exports.feed = (req, res) => {
                                         // query para pegar quantidade de curtidas
                                         let sql2 = "SELECT id_ideia, id_usuario FROM curtida_ideia WHERE "
                                         // query para pegar os comentarios
-                                        let sql3 = "SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 3 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND ("
+                                        let sql3 = "SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 3 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND ("
                                         // query para pegar as tecnologias de cada ideia
                                         let sql4 = "SELECT * FROM tecnologia_usada WHERE "                                        
                                                 
