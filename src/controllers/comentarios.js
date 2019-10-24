@@ -68,7 +68,7 @@ exports.envia_comentario = (req, res) => {
             return res.status(403).send({err: "Não foi possivel inserir a mensagem"}).end()
         }else{           
             let newToken = "Bearer " + geraToken({id: id_usuario})
-            return res.status(200).send({msg: "OK", token: newToken}).end()              
+            return res.status(200).send({id_comentario: rows.insertId, token: newToken}).end()              
         }
     })    
 }
@@ -94,11 +94,16 @@ exports.apaga_comentario = (req, res) => {
         if(err){
             return res.status(403).send({err: err}).end();
         }else{
-            let newToken = "Bearer " + geraToken({id: id_usuario})
-            return res.status(200).send({
-                msg: "ok",
-                token: newToken
-            }).end()
+            if(rows[0][0].msg_erro){
+                return res.status(200).send({msg_erro: rows[0][0].msg_erro}).end()
+            }else if(rows[0][0].msg_sucesso){              
+                let newToken = "Bearer " + geraToken({id: id_usuario})
+                return res.status(200).send({
+                    msg: "ok",
+                    token: newToken
+                }).end()
+            }
+
         }
     })
 }
