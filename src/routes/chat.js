@@ -19,6 +19,7 @@ module.exports = app => {
     var io = require('socket.io')(http);
 
     io.origins(['http://127.0.0.1:5500']);
+
     io.on('connection', (socket) => {
         console.log("Detectado um novo usuario no chat: id_socket - " + socket.id)
         socket.on("chat_message", (dados) => {
@@ -30,6 +31,7 @@ module.exports = app => {
                 }
             })
         })
+        
     })
 
     http.listen(8080, () => {

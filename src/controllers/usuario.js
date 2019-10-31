@@ -121,35 +121,46 @@ exports.cadastro = (req, res) => {
                                 // Guarda todas as tecnologias em uma variavel
                                 let count = 0
                                 let insert = ""
-                                while (count < req.body.usuario.tecnologias_usuario.length){
-                                    if(count == req.body.usuario.tecnologias_usuario.length - 1) // req.body.usuario.tecnologias_usuario[count] 
-                                        insert += "(" + req.body.usuario.tecnologias_usuario[count]  + ", " + rows2.insertId + ") "
-                                    else
-                                        insert += "(" + req.body.usuario.tecnologias_usuario[count]  + ", " + rows2.insertId + "), "  
-    
-                                    count++
-                                }                        
-    
-                                database.query("INSERT INTO tecnologia_usuario VALUES " + insert, (err3, rows3, fields3) => {
-                                    if(err3){
-                                        return res.status(200).send({err: "Não foi possível cadastrar as tecnologias"}).end()
-                                    }else{
-                                        //Enviar email  
-                                        /**
-                                         * ----------------------Arrumar
-                                         */
-                                        
-                                        database.query("INSERT INTO tb_notificacao VALUES (?, 0, 0);", [rows2.insertId], (err4, rows4, fields4) => {
-                                            if(err4){
-                                                return res.status(200).send({err: err4}).end()
-                                            }else{
-                                                let newToken = geraToken({id: rows2.insertId})
-                                                let send = envia_email(req.body.usuario.email_usuario, newToken, req.body.usuario.nm_usuario)
-                                                return res.status(200).send({msg: "Email enviado! Favor confirmar endereço de email!"}).end()
-                                            }
-                                        }) 
-                                    }
-                                })
+                                if(req.body.usuario.tecnologias_usuario.length > 0){
+                                    while (count < req.body.usuario.tecnologias_usuario.length){
+                                        if(count == req.body.usuario.tecnologias_usuario.length - 1) // req.body.usuario.tecnologias_usuario[count] 
+                                            insert += "(" + req.body.usuario.tecnologias_usuario[count]  + ", " + rows2.insertId + ") "
+                                        else
+                                            insert += "(" + req.body.usuario.tecnologias_usuario[count]  + ", " + rows2.insertId + "), "  
+        
+                                        count++
+                                    }                        
+        
+                                    database.query("INSERT INTO tecnologia_usuario VALUES " + insert, (err3, rows3, fields3) => {
+                                        if(err3){
+                                            return res.status(200).send({err: "Não foi possível cadastrar as tecnologias"}).end()
+                                        }else{
+                                            
+                                            database.query("INSERT INTO tb_notificacao VALUES (?, 0, 0);", [rows2.insertId], (err4, rows4, fields4) => {
+                                                if(err4){
+                                                    return res.status(200).send({err: err4}).end()
+                                                }else{
+                                                    let newToken = geraToken({id: rows2.insertId})
+                                                    let send = envia_email(req.body.usuario.email_usuario, newToken, req.body.usuario.nm_usuario)
+                                                    return res.status(200).send({msg: "Email enviado! Favor confirmar endereço de email!"}).end()
+                                                }
+                                            }) 
+                                        }
+                                    })
+                                }else{                                   
+                                            
+                                    database.query("INSERT INTO tb_notificacao VALUES (?, 0, 0, 0);", [rows2.insertId], (err4, rows4, fields4) => {
+                                        if(err4){
+                                            return res.status(200).send({err: err4}).end()
+                                        }else{
+                                            let newToken = geraToken({id: rows2.insertId})
+                                            let send = envia_email(req.body.usuario.email_usuario, newToken, req.body.usuario.nm_usuario)
+                                            return res.status(200).send({msg: "Email enviado! Favor confirmar endereço de email!"}).end()
+                                        }
+                                    }) 
+                                     
+                                }
+                                
                             }
                         })
                     }                               
@@ -192,7 +203,7 @@ exports.login = (req, res) => {
                                 if(rows[0].status_usuario == 0){
                                     return res.status(200).send({err: "Você precisa verificar seu email!"}).end()
                                 }else{
-                                    database.query("SELECT id_ultima_curtida, id_ultimo_comentario FROM tb_notificacao WHERE id_usuario = ?", [rows[0].id_usuario], (err2, rows2, fields2) => {
+                                    database.query("SELECT * FROM tb_notificacao WHERE id_usuario = ?", [rows[0].id_usuario], (err2, rows2, fields2) => {
                                         if(err2){
                                             return res.status(200).send({err: err2}).end()
                                         }else{
@@ -204,7 +215,8 @@ exports.login = (req, res) => {
                                                     id_usuario : rows[0].id_usuario,
                                                     nm_usuario : rows[0].nm_usuario,
                                                     id_ultima_curtida : rows2[0].id_ultima_curtida,
-                                                    id_ultimo_comentario : rows2[0].id_ultimo_comentario
+                                                    id_ultimo_comentario : rows2[0].id_ultimo_comentario,
+                                                    id_ultima_participacao: rows2[0].id_ultima_participacao
                                                 },
                                                 token: newToken
                                             }).end() 

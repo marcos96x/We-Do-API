@@ -67,8 +67,20 @@ exports.envia_comentario = (req, res) => {
         if(err){
             return res.status(403).send({err: "Não foi possivel inserir a mensagem"}).end()
         }else{           
-            let newToken = "Bearer " + geraToken({id: id_usuario})
-            return res.status(200).send({id_comentario: rows.insertId, token: newToken}).end()              
+            database.query("SELECT id_usuario FROM participante_ideia WHERE id_ideia = ? AND idealizador = 1", [id_ideia], (err4, rows4, fields4) => {
+                if(err4){
+                    res.status(403).send({err: err4}).end()
+                }else{
+                    database.query("UPDATE tb_notificacao SET id_ultimo_comentario = ? WHERE id_usuario = ?", [rows.insertId, rows4[0].id_usuario], (err2, rows2, fields2) => {
+                        if(err2){
+                            return res.status(403).send({err: err2}).end()
+                        }else{
+                            let newToken = geraToken({id: id_usuario})
+                            return res.status(200).send({msg: "Curtiu", token: newToken}).end()
+                        }
+                    })   
+                }
+            })         
         }
     })    
 }

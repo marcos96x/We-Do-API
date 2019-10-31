@@ -38,12 +38,24 @@ exports.interesse = (req, res) => {
         }else{
             if(rows.length == []){
                 // insere
-                database.query("INSERT INTO participante_ideia VALUES (?, ?, 0, NOW(), 0)", [id_usuario, id_ideia], (err2, rows2, fields2) => {
+                database.query("INSERT INTO participante_ideia VALUES (default, ?, ?, 0, NOW(), 0)", [id_usuario, id_ideia], (err2, rows2, fields2) => {
                     if(err2){
                         return res.status(403).send({err: "Erro ao solicitar interesse na ideia"}).end()
                     }else{
-                        let newToken = geraToken({id: id_usuario})
-                        return res.status(200).send({msg: "Solicitou", token: newToken}).end()
+                        database.query("SELECT id_usuario FROM participante_ideia WHERE id_ideia = ? AND idealizador = 1", [id_ideia], (err4, rows4, fields4) => {
+                            if(err4){
+                                res.status(403).send({err: err4}).end()
+                            }else{
+                                database.query("UPDATE tb_notificacao SET id_ultima_participacao = ? WHERE id_usuario = ?", [rows2.insertId, rows4[0].id_usuario], (err3, rows3, fields3) => {
+                                    if(err3){
+                                        return res.status(403).send({err: err3}).end()
+                                    }else{
+                                        let newToken = geraToken({id: id_usuario})
+                                        return res.status(200).send({msg: "Solicitou", token: newToken}).end()
+                                    }
+                                })
+                            }
+                        })
                     }
                 })                
             }else{
@@ -90,8 +102,20 @@ exports.curtida = (req, res) => {
                     if(err2){
                         return res.status(403).send({err: "Erro ao curtir a ideia"}).end()
                     }else{
-                        let newToken = geraToken({id: id_usuario})
-                        return res.status(200).send({msg: "Curtiu", token: newToken}).end()
+                        database.query("SELECT id_usuario FROM participante_ideia WHERE id_ideia = ? AND idealizador = 1", [id_ideia], (err4, rows4, fields4) => {
+                            if(err4){
+                                res.status(403).send({err: err4}).end()
+                            }else{
+                                database.query("UPDATE tb_notificacao SET id_ultima_curtida = ? WHERE id_usuario = ?", [rows2.insertId, rows4[0].id_usuario], (err3, rows3, fields3) => {
+                                    if(err3){
+                                        return res.status(403).send({err: err3}).end()
+                                    }else{
+                                        let newToken = geraToken({id: id_usuario})
+                                        return res.status(200).send({msg: "Curtiu", token: newToken}).end()
+                                    }
+                                })
+                            }
+                        })
                     }
                 })
             }else{
@@ -137,162 +161,279 @@ exports.feed = (req, res) => {
                     // Guarda as tecnologias que o usuario gosta
                     let tecnologias = []
                     // Insere em tecnologias todas as tecnologias referente ao usuario
-                    while (count < rows.length){
-                    tecnologias.push(rows[count].id_tecnologia)
-                    count++
-                    }
-                    // Monta uma pré-query de busca das ideias com base nas tecnologias que o usuario prefere
-                    let sql = "SELECT DISTINCT id_ideia FROM tecnologia_ideia WHERE "
-
-                    count = 0
-                    while (count < tecnologias.length){
-                        if(count == tecnologias.length - 1){
-                            sql += "id_tecnologia = " + tecnologias[count]
-                        }else{
-                            sql += "id_tecnologia = " + tecnologias[count] + " OR "
-                        }
-                        count++
-                    }
-
-                    database.query(sql, (err2, rows2, fields2) => {
-                        if(err2){
-                            return res.status(403).send({err: "Erro na busca por ideias"}).end()
-                        }else{
-                            // Armazena as ideias que tem tecnologias que o usuario prefere
-                            let ideias = []
-                            count = 0
-                            while(count < rows2.length){
-                                ideias.push(rows2[count].id_ideia)
-                                count++
-                            }
-                            
-                            // Buscar todas as ideias que o usuario prefere 
-                            count = 0
-                            sql = "SELECT * FROM tb_ideia WHERE "
-                            while(count < ideias.length){
-                                if(count == ideias.length - 1){
-                                    sql += "id_ideia = " + ideias[count]
+                    if(rows.length == []){
+                        // exibe o feed com todas as ideias
+                        database.query("SELECT * FROM tb_ideia", (err3, rows3, fields3) => {
+                            if(err3){
+                                return res.status(403).send({err: err3}).end()
+                            }else{
+                                // Guarda os dados das ideias que tem tecnologias que o usuario tem interesse
+                                let ideias_pesquisadas = rows3
+                                if(ideias_pesquisadas.length == []){
+                                    // Caso não tenha ideias
+                                    return res.status(200).send({ideias: ideias_pesquisadas}).end()
                                 }else{
-                                    sql += "id_ideia = " + ideias[count] + " OR "
-                                }
-                                count++
-                            }
-
-                            database.query(sql, (err3, rows3, fields3) => {
-                                if(err3){
-                                    return res.status(403).send({err: err3}).end()
-                                }else{
-                                    // Guarda os dados das ideias que tem tecnologias que o usuario tem interesse
-                                    let ideias_pesquisadas = rows3
-                                    if(ideias_pesquisadas.length == []){
-                                        // Caso não tenha ideias
-                                        return res.status(200).send({ideias: ideias_pesquisadas}).end()
-                                    }else{
-                                        // Caso tenha ideias, pesquisar os usuários que fazem parte destas ideias
-                                        // query para pegar participantes
-                                        sql = "SELECT * FROM membros_ideias WHERE "                                
-                                        // query para pegar quantidade de curtidas
-                                        let sql2 = "SELECT id_ideia, id_usuario FROM curtida_ideia WHERE "
-                                        // query para pegar os comentarios
-                                        let sql3 = "SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 3 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND ("
-                                        // query para pegar as tecnologias de cada ideia
-                                        let sql4 = "SELECT * FROM tecnologia_usada WHERE "                                        
-                                                
-                                        count = 0
-                                        while(count < ideias_pesquisadas.length){
-                                            if(count == ideias_pesquisadas.length - 1){
-                                                sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia
-                                                sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
-                                                sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ")"
-                                                sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
-                                            }else{
-                                                sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
-                                                sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
-                                                sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
-                                                sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
-                                            }
-                                            count++
+                                    // Caso tenha ideias, pesquisar os usuários que fazem parte destas ideias
+                                    // query para pegar participantes
+                                    sql = "SELECT * FROM membros_ideias WHERE "                                
+                                    // query para pegar quantidade de curtidas
+                                    let sql2 = "SELECT id_ideia, id_usuario FROM curtida_ideia WHERE "
+                                    // query para pegar os comentarios
+                                    let sql3 = "SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 3 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND ("
+                                    // query para pegar as tecnologias de cada ideia
+                                    let sql4 = "SELECT * FROM tecnologia_usada WHERE "                                        
+                                            
+                                    count = 0
+                                    while(count < ideias_pesquisadas.length){
+                                        if(count == ideias_pesquisadas.length - 1){
+                                            sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia
+                                            sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
+                                            sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ")"
+                                            sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
+                                        }else{
+                                            sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
+                                            sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
+                                            sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
+                                            sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
                                         }
-                                        // Busco os usuarios atrelados às ideias
-                                        database.query(sql, (err4, rows4, fields4) => {
-                                            if(err4){
-                                                return res.status(403).send({err: "Erro ao buscar usuários colaboradores da ideia"}).end()
-                                            }else{
-                                                // armazena todos os integrante das ideias
-                                                let usuarios_ideias = rows4
-                                                
-                                                // Saber quantas curtidas tem cada ideia
-                                                database.query(sql2, (err5, rows5, fields5) => {
-                                                    if(err5){
-                                                        return res.status(403).send({err: "Erro na busca das curtidas da ideia"}).end()
-                                                    }else{
-                                                        let curtidas_ideias = rows5
-                                                        // Saber os comentarios
-                                                        database.query(sql3, (err6, rows6, fields6) => {
-                                                            if(err6){
-                                                                return res.status(403).send({err: "Erro na busca dos comentarios da ideia"}).end()
-                                                            }else{
-                                                                let comentarios_ideias = rows6
+                                        count++
+                                    }
+                                    // Busco os usuarios atrelados às ideias
+                                    database.query(sql, (err4, rows4, fields4) => {
+                                        if(err4){
+                                            return res.status(403).send({err: "Erro ao buscar usuários colaboradores da ideia"}).end()
+                                        }else{
+                                            // armazena todos os integrante das ideias
+                                            let usuarios_ideias = rows4
+                                            
+                                            // Saber quantas curtidas tem cada ideia
+                                            database.query(sql2, (err5, rows5, fields5) => {
+                                                if(err5){
+                                                    return res.status(403).send({err: "Erro na busca das curtidas da ideia"}).end()
+                                                }else{
+                                                    let curtidas_ideias = rows5
+                                                    // Saber os comentarios
+                                                    database.query(sql3, (err6, rows6, fields6) => {
+                                                        if(err6){
+                                                            return res.status(403).send({err: "Erro na busca dos comentarios da ideia"}).end()
+                                                        }else{
+                                                            let comentarios_ideias = rows6
 
-                                                                database.query(sql4, (err7, rows7, fields7) => {
-                                                                    if(err7){
-                                                                        return res.status(403).send({err: "Erro ao buscar tecnologias das ideias"}).end()
-                                                                    }else{
-                                                                        let tecnologias_usadas = rows7
-                                                                        // coloca os membros dentro da sua devida ideia
-                                                                        for(let i = 0; i < ideias_pesquisadas.length; i++){
-                                                                            ideias_pesquisadas[i].membros = []
-                                                                            ideias_pesquisadas[i].tecnologias = []      
-                                                                            ideias_pesquisadas[i].curtidas = []   
-                                                                            ideias_pesquisadas[i].comentarios = []                                                               
+                                                            database.query(sql4, (err7, rows7, fields7) => {
+                                                                if(err7){
+                                                                    return res.status(403).send({err: "Erro ao buscar tecnologias das ideias"}).end()
+                                                                }else{
+                                                                    let tecnologias_usadas = rows7
+                                                                    // coloca os membros dentro da sua devida ideia
+                                                                    for(let i = 0; i < ideias_pesquisadas.length; i++){
+                                                                        ideias_pesquisadas[i].membros = []
+                                                                        ideias_pesquisadas[i].tecnologias = []      
+                                                                        ideias_pesquisadas[i].curtidas = []   
+                                                                        ideias_pesquisadas[i].comentarios = []                                                               
 
-                                                                            for(let i2 = 0; i2 < usuarios_ideias.length; i2++){
-                                                                                // busca por todos os membros
-                                                                                if(usuarios_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
-                                                                                    ideias_pesquisadas[i].membros.push(usuarios_ideias[i2])                                                                                                                                                               
-                                                                                }
+                                                                        for(let i2 = 0; i2 < usuarios_ideias.length; i2++){
+                                                                            // busca por todos os membros
+                                                                            if(usuarios_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                ideias_pesquisadas[i].membros.push(usuarios_ideias[i2])                                                                                                                                                                                                                                          
                                                                             }
-
-                                                                            for(let i2 = 0; i2 < tecnologias_usadas.length; i2++){
-                                                                                // busca por todas as tecnologias
-                                                                                if(tecnologias_usadas[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
-                                                                                    ideias_pesquisadas[i].tecnologias.push(tecnologias_usadas[i2])
-                                                                                }
-                                                                            }
-
-                                                                            for(let i2 = 0; i2 < curtidas_ideias.length; i2++){
-                                                                                // busca por todas as curtidas
-                                                                                if(curtidas_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
-                                                                                    ideias_pesquisadas[i].curtidas.push(curtidas_ideias[i2])
-                                                                                }
-                                                                            }
-
-                                                                            for(let i2 = 0; i2 < comentarios_ideias.length; i2++){
-                                                                                // busca por todas os comentários
-                                                                                if(comentarios_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
-                                                                                    ideias_pesquisadas[i].comentarios.push(comentarios_ideias[i2])
-                                                                                }
+                                                                        }   
+                                                                        for(let i2 = 0; i2 < tecnologias_usadas.length; i2++){
+                                                                            // busca por todas as tecnologias
+                                                                            if(tecnologias_usadas[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                ideias_pesquisadas[i].tecnologias.push(tecnologias_usadas[i2])
                                                                             }
                                                                         }
-                                                                        let newToken = geraToken({id: id_usuario})
-                                                                        return res.status(200).send({
-                                                                            ideias: ideias_pesquisadas,
-                                                                            token: newToken
-                                                                        }).end()
+
+                                                                        for(let i2 = 0; i2 < curtidas_ideias.length; i2++){
+                                                                            // busca por todas as curtidas
+                                                                            if(curtidas_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                ideias_pesquisadas[i].curtidas.push(curtidas_ideias[i2])
+                                                                            }
+                                                                        }
+
+                                                                        for(let i2 = 0; i2 < comentarios_ideias.length; i2++){
+                                                                            // busca por todas os comentários
+                                                                            if(comentarios_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                ideias_pesquisadas[i].comentarios.push(comentarios_ideias[i2])
+                                                                            }
+                                                                        }
                                                                     }
-                                                                })                                                      
-                                                            }
-                                                        })
-                                                    }
-                                                })
-                                            }
-                                        })   
-                                    }
+                                                                    let newToken = geraToken({id: id_usuario})
+                                                                    return res.status(200).send({
+                                                                        ideias: ideias_pesquisadas,
+                                                                        token: newToken
+                                                                    }).end()
+                                                                }
+                                                            })                                                      
+                                                        }
+                                                    })
+                                                }
+                                            })
+                                        }
+                                    })   
                                 }
-                            })
+                            }
+                        })
+                    }else{
+                        // exibe o feed com base nas tecnologias
+                        while (count < rows.length){
+                            tecnologias.push(rows[count].id_tecnologia)
+                            count++
                         }
-                    })             
+                        // Monta uma pré-query de busca das ideias com base nas tecnologias que o usuario prefere
+                        let sql = "SELECT DISTINCT id_ideia FROM tecnologia_ideia WHERE "
+    
+                        count = 0
+                        while (count < tecnologias.length){
+                            if(count == tecnologias.length - 1){
+                                sql += "id_tecnologia = " + tecnologias[count]
+                            }else{
+                                sql += "id_tecnologia = " + tecnologias[count] + " OR "
+                            }
+                            count++
+                        }
+    
+                        database.query(sql, (err2, rows2, fields2) => {
+                            if(err2){
+                                return res.status(403).send({err: "Erro na busca por ideias"}).end()
+                            }else{
+                                // Armazena as ideias que tem tecnologias que o usuario prefere
+                                let ideias = []
+                                count = 0
+                                while(count < rows2.length){
+                                    ideias.push(rows2[count].id_ideia)
+                                    count++
+                                }
+                                
+                                // Buscar todas as ideias que o usuario prefere 
+                                count = 0
+                                sql = "SELECT * FROM tb_ideia WHERE "
+                                while(count < ideias.length){
+                                    if(count == ideias.length - 1){
+                                        sql += "id_ideia = " + ideias[count]
+                                    }else{
+                                        sql += "id_ideia = " + ideias[count] + " OR "
+                                    }
+                                    count++
+                                }
+    
+                                database.query(sql, (err3, rows3, fields3) => {
+                                    if(err3){
+                                        return res.status(403).send({err: err3}).end()
+                                    }else{
+                                        // Guarda os dados das ideias que tem tecnologias que o usuario tem interesse
+                                        let ideias_pesquisadas = rows3
+                                        if(ideias_pesquisadas.length == []){
+                                            // Caso não tenha ideias
+                                            return res.status(200).send({ideias: ideias_pesquisadas}).end()
+                                        }else{
+                                            // Caso tenha ideias, pesquisar os usuários que fazem parte destas ideias
+                                            // query para pegar participantes
+                                            sql = "SELECT * FROM membros_ideias WHERE "                                
+                                            // query para pegar quantidade de curtidas
+                                            let sql2 = "SELECT id_ideia, id_usuario FROM curtida_ideia WHERE "
+                                            // query para pegar os comentarios
+                                            let sql3 = "SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 3 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND ("
+                                            // query para pegar as tecnologias de cada ideia
+                                            let sql4 = "SELECT * FROM tecnologia_usada WHERE "                                        
+                                                    
+                                            count = 0
+                                            while(count < ideias_pesquisadas.length){
+                                                if(count == ideias_pesquisadas.length - 1){
+                                                    sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia
+                                                    sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
+                                                    sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ")"
+                                                    sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
+                                                }else{
+                                                    sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
+                                                    sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
+                                                    sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
+                                                    sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + " OR "
+                                                }
+                                                count++
+                                            }
+                                            // Busco os usuarios atrelados às ideias
+                                            database.query(sql, (err4, rows4, fields4) => {
+                                                if(err4){
+                                                    return res.status(403).send({err: "Erro ao buscar usuários colaboradores da ideia"}).end()
+                                                }else{
+                                                    // armazena todos os integrante das ideias
+                                                    let usuarios_ideias = rows4
+                                                    
+                                                    // Saber quantas curtidas tem cada ideia
+                                                    database.query(sql2, (err5, rows5, fields5) => {
+                                                        if(err5){
+                                                            return res.status(403).send({err: "Erro na busca das curtidas da ideia"}).end()
+                                                        }else{
+                                                            let curtidas_ideias = rows5
+                                                            // Saber os comentarios
+                                                            database.query(sql3, (err6, rows6, fields6) => {
+                                                                if(err6){
+                                                                    return res.status(403).send({err: "Erro na busca dos comentarios da ideia"}).end()
+                                                                }else{
+                                                                    let comentarios_ideias = rows6
+    
+                                                                    database.query(sql4, (err7, rows7, fields7) => {
+                                                                        if(err7){
+                                                                            return res.status(403).send({err: "Erro ao buscar tecnologias das ideias"}).end()
+                                                                        }else{
+                                                                            let tecnologias_usadas = rows7
+                                                                            // coloca os membros dentro da sua devida ideia
+                                                                            for(let i = 0; i < ideias_pesquisadas.length; i++){
+                                                                                ideias_pesquisadas[i].membros = []
+                                                                                ideias_pesquisadas[i].tecnologias = []      
+                                                                                ideias_pesquisadas[i].curtidas = []   
+                                                                                ideias_pesquisadas[i].comentarios = []                                                               
+    
+                                                                                for(let i2 = 0; i2 < usuarios_ideias.length; i2++){
+                                                                                    // busca por todos os membros
+                                                                                    if(usuarios_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                        ideias_pesquisadas[i].membros.push(usuarios_ideias[i2])                                                                                                                                                               
+                                                                                    }
+                                                                                }
+    
+                                                                                for(let i2 = 0; i2 < tecnologias_usadas.length; i2++){
+                                                                                    // busca por todas as tecnologias
+                                                                                    if(tecnologias_usadas[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                        ideias_pesquisadas[i].tecnologias.push(tecnologias_usadas[i2])
+                                                                                    }
+                                                                                }
+    
+                                                                                for(let i2 = 0; i2 < curtidas_ideias.length; i2++){
+                                                                                    // busca por todas as curtidas
+                                                                                    if(curtidas_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                        ideias_pesquisadas[i].curtidas.push(curtidas_ideias[i2])
+                                                                                    }
+                                                                                }
+    
+                                                                                for(let i2 = 0; i2 < comentarios_ideias.length; i2++){
+                                                                                    // busca por todas os comentários
+                                                                                    if(comentarios_ideias[i2].id_ideia == ideias_pesquisadas[i].id_ideia){
+                                                                                        ideias_pesquisadas[i].comentarios.push(comentarios_ideias[i2])
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            let newToken = geraToken({id: id_usuario})
+                                                                            return res.status(200).send({
+                                                                                ideias: ideias_pesquisadas,
+                                                                                token: newToken
+                                                                            }).end()
+                                                                        }
+                                                                    })                                                      
+                                                                }
+                                                            })
+                                                        }
+                                                    })
+                                                }
+                                            })   
+                                        }
+                                    }
+                                })
+                            }
+                        })             
+                        }
                     }
+                    
                 })
             }
         }

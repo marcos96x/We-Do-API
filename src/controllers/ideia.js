@@ -111,7 +111,7 @@ exports.cria_ideia = (req, res) => {
 
     database.query(sql, (err, rows, fields) => {
         if (err) {
-            return res.status(403).send({ err: "Erro ao inserir uma nova idéia" }).end()
+            return res.status(403).send({ err: "Erro ao inserir uma nova ideia" }).end()
         } else {
             let id_nova_ideia = rows.insertId
             let count = 0
