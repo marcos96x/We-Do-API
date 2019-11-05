@@ -5,9 +5,7 @@ module.exports = app => {
     const authMiddleware = require("../middlewares/auth") 
 
 
-    app.route("/comentario/:id_usuario")
-        .all()
-        .get(controllerComentario.mostra_comentarios)
-        .post(controllerComentario.envia_comentario)
-        .delete(controllerComentario.apaga_comentario)
+    
+    app.post("/comentario", controllerComentario.envia_comentario)
+    app.delete("/comentario", controllerComentario.apaga_comentario)
 }

@@ -42,16 +42,17 @@ exports.interesse = (req, res) => {
                     if(err2){
                         return res.status(403).send({err: "Erro ao solicitar interesse na ideia"}).end()
                     }else{
-                        database.query("SELECT id_usuario FROM participante_ideia WHERE id_ideia = ? AND idealizador = 1", [id_ideia], (err4, rows4, fields4) => {
-                            if(err4){
-                                res.status(403).send({err: err4}).end()
+                        database.query("SELECT nm_usuario FROM tb_usuario WHERE id_usuario = ?", [id_usuario], (err3, rows3, fields3) => {
+                            if(err3){
+                                res.status(403).send({err: err3}).end()
                             }else{
-                                database.query("UPDATE tb_notificacao SET id_ultima_participacao = ? WHERE id_usuario = ?", [rows2.insertId, rows4[0].id_usuario], (err3, rows3, fields3) => {
-                                    if(err3){
-                                        return res.status(403).send({err: err3}).end()
+                                let msg = `${rows3[0].nm_usuario} comentou em uma ideia na qual vc é idealizador`
+                                let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
+                                database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?)", [id_usuario, id_ideia, msg, link], (err4, rows4, fields4) => {
+                                    if(err4){
+                                        return res.status(403).send({err: err4}).end()
                                     }else{
-                                        let newToken = geraToken({id: id_usuario})
-                                        return res.status(200).send({msg: "Solicitou", token: newToken}).end()
+                                        return res.status(200).send({msg: "ok"}).end()
                                     }
                                 })
                             }
@@ -64,6 +65,7 @@ exports.interesse = (req, res) => {
                     if(err2){
                         return res.status(403).send({err: "Erro ao deletar o interesse"}).end()
                     }else{
+                        database.query("DELETE FROM tb_notificacao WHERE ")
                         let newToken = geraToken({id: id_usuario})
                         return res.status(200).send({msg: "Cancelou", token: newToken}).end()
                     }
@@ -102,16 +104,17 @@ exports.curtida = (req, res) => {
                     if(err2){
                         return res.status(403).send({err: "Erro ao curtir a ideia"}).end()
                     }else{
-                        database.query("SELECT id_usuario FROM participante_ideia WHERE id_ideia = ? AND idealizador = 1", [id_ideia], (err4, rows4, fields4) => {
-                            if(err4){
-                                res.status(403).send({err: err4}).end()
+                        database.query("SELECT nm_usuario FROM tb_usuario WHERE id_usuario = ?", [id_usuario], (err3, rows3, fields3) => {
+                            if(err3){
+                                res.status(403).send({err: err3}).end()
                             }else{
-                                database.query("UPDATE tb_notificacao SET id_ultima_curtida = ? WHERE id_usuario = ?", [rows2.insertId, rows4[0].id_usuario], (err3, rows3, fields3) => {
+                                let msg = `${rows3[0].nm_usuario} curtiu uma ideia na qual vc é idealizador`
+                                let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
+                                database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?)", [id_usuario, id_ideia, msg, link], (err3, rows3, fields3) => {
                                     if(err3){
                                         return res.status(403).send({err: err3}).end()
                                     }else{
-                                        let newToken = geraToken({id: id_usuario})
-                                        return res.status(200).send({msg: "Curtiu", token: newToken}).end()
+                                        return res.status(200).send({msg: "ok"}).end()
                                     }
                                 })
                             }
