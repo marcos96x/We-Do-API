@@ -13,38 +13,6 @@ function geraToken(params = {}){
 }
 
 /**
- * Mostra todos os comentários relacionados à uma determinada idéia
- * 
- * @param id_usuario
- * 
- * @body "ideia": {
- *          "id_ideia": id_da_ideia
- *       }
- * 
- * @return JSON {comentarios, token} / {err}
- 
-
-exports.mostra_comentarios = (req, res) => {
-
-    let id_usuario = req.params.id_usuario
-    let id_ideia = req.body.ideia.id_ideia   
-    
-    database.query("SELECT * FROM mensagens WHERE uso_mensagem = 2 AND id_ideia = ?", id_ideia, (err, rows, fields) => {
-        if(err){
-            return res.status(403).send({err: "Erro na busca dos comentarios"}).end()
-        }else{
-            let newToken = "Bearer " + geraToken({id: id_usuario})
-
-            return res.status(200).send({
-                comentarios: rows,
-                token: newToken
-            }).end()
-        }
-    })     
-}
-*/
-
-/**
  * Envia um novo comentário para uma determinada ideia
  * 
  * @param void
@@ -78,13 +46,21 @@ exports.envia_comentario = (req, res) => {
                 }else{
                     let msg = `${rows2[0].nm_usuario} comentou em uma ideia na qual vc é idealizador`
                     let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
-                    database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, ?, 2)", [id_usuario, id_ideia, null, rows.insertId, null, msg, link], (err3, rows3, fields3) => {
+
+                    database.query("SELECT id_usuario FROM participante_ideia WHERE idealizador = 1 AND id_ideia = ?", id_ideia, (err4, rows4, fields4) => {
                         if(err3){
                             return res.status(403).send({err: err3}).end()
                         }else{
-                            return res.status(200).send({msg: "ok"}).end()
+                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, ?, 2)", [rows4[0].id_usuario, id_ideia, null, rows.insertId, null, msg, link], (err3, rows3, fields3) => {
+                                if(err3){
+                                    return res.status(403).send({err: err3}).end()
+                                }else{
+                                    return res.status(200).send({msg: "ok"}).end()
+                                }
+                            })        
                         }
                     })
+                    
                 }
             })         
         }

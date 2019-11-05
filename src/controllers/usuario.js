@@ -15,6 +15,7 @@ function geraToken(params = {}){
 }
 
 function envia_email(destinatario, token, nome){
+    
     const transporter = nodemailer.createTransport({                                            
         host: "smtp.gmail.com",
         service: "gmail",
@@ -26,23 +27,43 @@ function envia_email(destinatario, token, nome){
             pass: "tcc2019wedo"
         },
         tls: { rejectUnauthorized: false }
-      })
-      let msg = "Saudações, "+nome+"! \n \n Obrigado por se registrar na plataforma We Do! \n \n \n Clique em http://127.0.0.1:5500/index.html?token=" + token + " para se autenticar e trocar ideias com outras pessoas! \n \n Caso você não tenha se cadastrado em nossa plataforma, apenas ignore este email! \n \n Obrigado pela compreensão.\n Atenciosamente \n Equipe We Do."
+    })
 
-      const mailOptions = {
-        from: "wedo.suporte@gmail.com",
-        to: destinatario,
-        subject: 'Verificação de email - We Do',
-        text: msg
-      }
+    var handlebars = require('handlebars');
+    var fs = require('fs');
 
-      transporter.sendMail(mailOptions, function(error, info){
-        if(error){
-            return error
-        }else{ 
-            return info
-        }
-      });
+    var readHTMLFile = function(path, callback) {
+        fs.readFile(path, {encoding: 'utf-8'}, function (err, html) {
+            if (err) {
+                throw err;
+                callback(err);
+            }
+            else {
+                callback(null, html);
+            }
+        });
+    };
+    let link = "http://127.0.0.1:5500/index.html?token=" + token
+    readHTMLFile(__dirname + '/../../public/email.html', function(err, html) {
+        var template = handlebars.compile(html);
+        var replacements = {
+            link_token: link
+        };
+        var htmlToSend = template(replacements);
+        var mailOptions = {
+            from: 'wedo.suporte@gmail.com',
+            to : destinatario,
+            subject : 'Verificação de email - We Do',
+            html : htmlToSend
+        };
+        transporter.sendMail(mailOptions, function(error, info){
+            if(error){
+                return error
+            }else{ 
+                return info
+            }
+          });
+    }); 
 }  
 
 exports.valida_conta = (req, res) => {
@@ -134,30 +155,17 @@ exports.cadastro = (req, res) => {
                                     database.query("INSERT INTO tecnologia_usuario VALUES " + insert, (err3, rows3, fields3) => {
                                         if(err3){
                                             return res.status(200).send({err: "Não foi possível cadastrar as tecnologias"}).end()
-                                        }else{
-                                            
-                                            database.query("INSERT INTO tb_notificacao VALUES (?, 0, 0);", [rows2.insertId], (err4, rows4, fields4) => {
-                                                if(err4){
-                                                    return res.status(200).send({err: err4}).end()
-                                                }else{
-                                                    let newToken = geraToken({id: rows2.insertId})
-                                                    let send = envia_email(req.body.usuario.email_usuario, newToken, req.body.usuario.nm_usuario)
-                                                    return res.status(200).send({msg: "Email enviado! Favor confirmar endereço de email!"}).end()
-                                                }
-                                            }) 
-                                        }
-                                    })
-                                }else{                                   
-                                            
-                                    database.query("INSERT INTO tb_notificacao VALUES (?, 0, 0, 0);", [rows2.insertId], (err4, rows4, fields4) => {
-                                        if(err4){
-                                            return res.status(200).send({err: err4}).end()
-                                        }else{
+                                        }else{ 
                                             let newToken = geraToken({id: rows2.insertId})
                                             let send = envia_email(req.body.usuario.email_usuario, newToken, req.body.usuario.nm_usuario)
-                                            return res.status(200).send({msg: "Email enviado! Favor confirmar endereço de email!"}).end()
+                                            return res.status(200).send({msg: "Email enviado! Favor confirmar endereço de email!"}).end()                                             
                                         }
-                                    }) 
+                                    })
+                                }else{ 
+                                    let newToken = geraToken({id: rows2.insertId})
+                                    let send = envia_email(req.body.usuario.email_usuario, newToken, req.body.usuario.nm_usuario)
+                                    return res.status(200).send({msg: "Email enviado! Favor confirmar endereço de email!"}).end()
+                                     
                                      
                                 }
                                 
