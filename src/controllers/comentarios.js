@@ -51,14 +51,19 @@ exports.envia_comentario = (req, res) => {
                         if(err4){
                             return res.status(403).send({err: err4}).end()
                         }else{
-                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 2, '0')", [rows4[0].id_usuario, id_ideia, rows.insertId, msg, link], (err3, rows3, fields3) => {
-                                if(err3){
-                                    console.log(err3)
-                                    return res.status(403).send({err: err3}).end()
-                                }else{
-                                    return res.status(200).send({msg: "ok", id_comentario: rows.insertId}).end()
-                                }
-                            })        
+                            if(rows4[0].id_usuario == id_usuario){
+                                return res.status(200).send({msg: "ok", id_comentario: rows.insertId}).end()
+                            }else{
+                                database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 2, '0')", [rows4[0].id_usuario, id_ideia, rows.insertId, msg, link], (err3, rows3, fields3) => {
+                                    if(err3){
+                                        console.log(err3)
+                                        return res.status(403).send({err: err3}).end()
+                                    }else{
+                                        return res.status(200).send({msg: "ok", id_comentario: rows.insertId}).end()
+                                    }
+                                }) 
+                            }
+                                   
                         }
                     })
                     
@@ -88,9 +93,9 @@ exports.apaga_comentario = (req, res) => {
 
     let id_usuario = req.body.usuario.id_usuario
     let id_mensagem = req.body.comentario.id_mensagem
-
     database.query("CALL spDeleta_mensagem(?, ?);", [id_usuario, id_mensagem], (err, rows, fields) => {
         if(err){
+            console.log(err)
             return res.status(403).send({err: err}).end();
         }else{
             if(rows[0][0].msg_erro){

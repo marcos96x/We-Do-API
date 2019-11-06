@@ -227,6 +227,48 @@ exports.aprova_interesse = (req, res) => {
     let id_ideia = req.body.ideia.id_ideia
     let id_criador = req.body.usuario.id_usuario
 
+    database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_criador, id_ideia], (err, rows, fields) => {
+        if(err){
+            return res.status(403).send({err: err}).end()
+        }else{
+            if(rows.length == 0){
+                res.status(200).send({msg: "Você não é o idealizador desta ideia!"}).end()
+            }else{
+                database.query("SELECT id_participacao FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ?", (id_usuario, id_ideia), (err5, rows5, fields5) => {
+                    if(err5){
+                        return res.status(403).send({err: err5}).end()
+                    }else{
+                        database.query("UPDATE participante_ideia SET status_solicitacao = 1 WHERE id_participacao = ?", rows5[0].id_participacao, (err2, rows2, fields2) => {
+                            if(err2){
+                                return res.status(403).send({err: err2}).end()
+                            }else{
+                                database.query("SELECT u.nm_usuario, i.nm_ideia FROM tb_usuario u JOIN tb_ideia i ON i.id_ideia = ? WHERE id_usuario = ?", [id_ideia, id_usuario], (err4, rows4, fields4) => {
+                                    if(err4){
+                                        return res.status(403).send({err: err4}).end()
+                                    }else{
+                                        let msg = `${rows4[0].nm_usuario} agora faz parte da sua ideia ${rows4[0].nm_ideia}`
+                                        let link = "http://localhost:5500/ideia_chat.html?id_ideia=" + id_ideia
+                                        database.query("UPDATE tb_notificacao SET msg_notificacao = ?, link_notificacao = ? WHERE id_evento = ? AND tp_notificacao = 3", [msg, link, rows5[0].id_participacao], (err3, rows3, fields3) => {
+                                            if(err3){
+                                                return res.status(403).send({err: err3}).end()
+                                            }else{
+                                                return res.status(200).send({msg: "Ok"}).end()
+                                            }       
+                                        })
+                                    }
+                                })                        
+                            }
+                        })
+                    }
+                })
+                
+            }
+        }
+    })
+
+
+
+
     database.query("SELECT * FROM tb_ideia WHERE id_usuario = ? AND id_ideia = ?", [id_criador, id_ideia], (err2, rows2, fields2) => {
         if (err2) {
             return res.status(403).send({ err: "Não foi possivel acessar a ideia" }).end()
@@ -417,7 +459,7 @@ exports.portifolio = (req, res) => {
 
     let id_usuario = req.params.id_usuario
 
-    database.query("SELECT id_ideia from participante_ideia WHERE id_usuario = ?", [id_usuario], (err, rows, fields) => {
+    database.query("SELECT id_ideia from participante_ideia WHERE id_usuario = ? AND status_solicitacao = 1", [id_usuario], (err, rows, fields) => {
         if (err) {
             return res.status(403).send({ err: "Nao foi possivel pesquisar seu portifólio" }).end()
         } else {
@@ -457,7 +499,7 @@ exports.projetos_atuais = (req, res) => {
 
     let id_usuario = req.params.id_usuario
 
-    database.query("SELECT id_ideia from participante_ideia WHERE id_usuario = ?", [id_usuario], (err, rows, fields) => {
+    database.query("SELECT id_ideia from participante_ideia WHERE id_usuario = ? AND status_solicitacao = 1", [id_usuario], (err, rows, fields) => {
         if (err) {
             return res.status(403).send({ err: "Nao foi possivel pesquisar seu portifólio" }).end()
         } else {

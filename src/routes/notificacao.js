@@ -1,9 +1,6 @@
 module.exports = app => {
     const controllerNotificacao = require("../controllers/notificacao")
 
-    app.get("/notificacao/comentarios/:id_usuario&:id_comentario", controllerNotificacao.comentarios)
-
-    app.get("/notificacao/curtidas/:id_usuario&:id_curtida", controllerNotificacao.curtida)
-
-    app.get("/notificacao/interesse/:id_usuario", controllerNotificacao.interesse)
+    app.get("/notificacoes/:id_usuario", controllerNotificacao.busca_notificacoes)
+    app.put("/notificacoes/:id_usuario", controllerNotificacao.muda_notificacoes_para_visualizadas)
 }
