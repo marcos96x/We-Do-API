@@ -46,30 +46,49 @@ exports.interesse = (req, res) => {
                             if(err3){
                                 res.status(403).send({err: err3}).end()
                             }else{
-                                let msg = `${rows3[0].nm_usuario} comentou em uma ideia na qual vc é idealizador`
-                                let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
-                                database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?)", [id_usuario, id_ideia, msg, link], (err4, rows4, fields4) => {
-                                    if(err4){
-                                        return res.status(403).send({err: err4}).end()
+                                database.query("SELECT id_usuario FROM participante_ideia WHERE idealizador = 1 AND id_ideia = ?", id_ideia, (err5, rows5, fields5) => {
+                                    if(err5){
+                                        return res.status(403).send({err: err5}).end()
                                     }else{
-                                        return res.status(200).send({msg: "ok"}).end()
+                                        let msg = `${rows3[0].nm_usuario} se interessou em uma ideia na qual vc é idealizador`
+                                        let link = "http://localhost:5500/perfil_usuario.html?usuario=" + id_usuario
+        
+                                        database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 3, '0')", [rows5[0].id_usuario, id_ideia, rows2.insertId , msg, link], (err4, rows4, fields4) => {
+                                            if(err4){
+                                                console.log(err4)
+                                                return res.status(403).send({err: err4}).end()
+                                            }else{
+                                                return res.status(200).send({msg: "ok"}).end()
+                                            }
+                                        })
                                     }
-                                })
+                                })                                
                             }
                         })
                     }
                 })                
             }else{
                 // Deleta
-                database.query("DELETE FROM participante_ideia WHERE id_ideia = ? AND id_usuario = ?", [id_ideia, id_usuario], (err2, rows2, fields2) => {
-                    if(err2){
-                        return res.status(403).send({err: "Erro ao deletar o interesse"}).end()
+                database.query("SELECT id_participacao FROM participante_ideia WHERE id_ideia = ? AND id_usuario = ?", [id_ideia, id_usuario], (err3, rows3, fields3) => {
+                    if(err3){
+                        return res.status(403).send({err: err3}).end()
                     }else{
-                        database.query("DELETE FROM tb_notificacao WHERE ")
-                        let newToken = geraToken({id: id_usuario})
-                        return res.status(200).send({msg: "Cancelou", token: newToken}).end()
+                        database.query("DELETE FROM tb_notificacao WHERE id_evento = ? AND tp_notificacao = 3", [rows3[0].id_participacao], (err2, rows2, fields2) => {
+                            if(err2){
+                                return res.status(403).send({err: err2}).end()
+                            }else{
+                                database.query("DELETE FROM participante_ideia WHERE id_participacao = ?", rows3[0].id_participacao, (err4, rows4, fields4) => {
+                                    if(err4){
+                                        return res.status(403).send({err: err4}).end()
+                                    }else{
+                                        let newToken = geraToken({id: id_usuario})
+                                        return res.status(200).send({msg: "Cancelou", token: newToken}).end()
+                                    }
+                                })
+                            }
+                        })
                     }
-                })
+                })                
             }
         }
     })
@@ -108,27 +127,39 @@ exports.curtida = (req, res) => {
                             if(err3){
                                 res.status(403).send({err: err3}).end()
                             }else{
-                                let msg = `${rows3[0].nm_usuario} curtiu uma ideia na qual vc é idealizador`
-                                let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
-                                database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?)", [id_usuario, id_ideia, msg, link], (err3, rows3, fields3) => {
-                                    if(err3){
-                                        return res.status(403).send({err: err3}).end()
+                                database.query("SELECT id_usuario FROM participante_ideia WHERE id_ideia = ? AND idealizador = 1", id_ideia, (err4, rows4, fields4) => {
+                                    if(err4){
+                                        return res.status(403).send({err: err4}).end()
                                     }else{
-                                        return res.status(200).send({msg: "ok"}).end()
+                                        let msg = `${rows3[0].nm_usuario} curtiu uma ideia na qual vc é idealizador`
+                                        let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
+                                        database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 1, '0')", [rows4[0].id_usuario, id_ideia, rows2.insertId, msg, link], (err5, rows5, fields5) => {
+                                            if(err5){
+                                                return res.status(403).send({err: err5}).end()
+                                            }else{
+                                                return res.status(200).send({msg: "ok"}).end()
+                                            }
+                                        })
                                     }
-                                })
+                                })                                
                             }
                         })
                     }
                 })
             }else{
                 // Deleta
-                database.query("DELETE FROM curtida_ideia WHERE id_ideia = ? AND id_usuario = ?", [id_ideia, id_usuario], (err2, rows2, fields2) => {
+                database.query("SELECT id_curtida FROM curtida_ideia WHERE id_ideia = ? AND id_usuario = ?", [id_ideia, id_usuario], (err2, rows2, fields2) => {
                     if(err2){
-                        return res.status(403).send({err: "Erro ao deletar a curtida"}).end()
+                        return res.status(403).send({err: err2}).end()
                     }else{
-                        let newToken = geraToken({id: id_usuario})
-                        return res.status(200).send({msg: "descurtiu", token: newToken}).end()
+                        database.query("DELETE FROM tb_notificacao WHERE id_evento = ? AND tp_notificacao = 1", rows2[0].id_curtida, (err3, rows3, fields3) => {
+                            if(err3){
+                                return res.status(403).send({err: err3}).end()
+                            }else{
+                                let newToken = geraToken({id: id_usuario})
+                                return res.status(200).send({msg: "descurtiu", token: newToken}).end()
+                            }
+                        })
                     }
                 })
             }

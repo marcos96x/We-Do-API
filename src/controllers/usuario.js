@@ -210,26 +210,18 @@ exports.login = (req, res) => {
                             }else{    
                                 if(rows[0].status_usuario == 0){
                                     return res.status(200).send({err: "Você precisa verificar seu email!"}).end()
-                                }else{
-                                    database.query("SELECT * FROM tb_notificacao WHERE id_usuario = ?", [rows[0].id_usuario], (err2, rows2, fields2) => {
-                                        if(err2){
-                                            return res.status(200).send({err: err2}).end()
-                                        }else{
-                                            //Loga
-                                            let newToken = "Bearer " + geraToken({"id": rows[0].id_usuario})
-                                                
-                                            return res.status(200).send({
-                                                usuario: {
-                                                    id_usuario : rows[0].id_usuario,
-                                                    nm_usuario : rows[0].nm_usuario,
-                                                    id_ultima_curtida : rows2[0].id_ultima_curtida,
-                                                    id_ultimo_comentario : rows2[0].id_ultimo_comentario,
-                                                    id_ultima_participacao: rows2[0].id_ultima_participacao
-                                                },
-                                                token: newToken
-                                            }).end() 
-                                        }
-                                    }) 
+                                }else{                                    
+                                    //Loga
+                                    let newToken = "Bearer " + geraToken({"id": rows[0].id_usuario})
+                                        
+                                    return res.status(200).send({
+                                        usuario: {
+                                            id_usuario : rows[0].id_usuario,
+                                            nm_usuario : rows[0].nm_usuario,
+                                        },
+                                        token: newToken
+                                    }).end() 
+                                    
                                 }                                                                                  
                             }                                              
                     });            

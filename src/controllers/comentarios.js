@@ -48,14 +48,15 @@ exports.envia_comentario = (req, res) => {
                     let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
 
                     database.query("SELECT id_usuario FROM participante_ideia WHERE idealizador = 1 AND id_ideia = ?", id_ideia, (err4, rows4, fields4) => {
-                        if(err3){
-                            return res.status(403).send({err: err3}).end()
+                        if(err4){
+                            return res.status(403).send({err: err4}).end()
                         }else{
-                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, ?, 2)", [rows4[0].id_usuario, id_ideia, null, rows.insertId, null, msg, link], (err3, rows3, fields3) => {
+                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 2, '0')", [rows4[0].id_usuario, id_ideia, rows.insertId, msg, link], (err3, rows3, fields3) => {
                                 if(err3){
+                                    console.log(err3)
                                     return res.status(403).send({err: err3}).end()
                                 }else{
-                                    return res.status(200).send({msg: "ok"}).end()
+                                    return res.status(200).send({msg: "ok", id_comentario: rows.insertId}).end()
                                 }
                             })        
                         }
@@ -95,7 +96,7 @@ exports.apaga_comentario = (req, res) => {
             if(rows[0][0].msg_erro){
                 return res.status(200).send({msg_erro: rows[0][0].msg_erro}).end()
             }else if(rows[0][0].msg_sucesso){   
-                database.query("DELETE FROM tb_notificacao WHERE id_comentario = ? AND tp_notificacao = 2", id_mensagem, (err2, rows2, fields2) => {
+                database.query("DELETE FROM tb_notificacao WHERE id_evento = ? AND tp_notificacao = 2", id_mensagem, (err2, rows2, fields2) => {
                     if(err2){
                         return res.status(403).send({err: err2}).end()
                     }else{
