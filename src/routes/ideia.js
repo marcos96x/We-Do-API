@@ -19,13 +19,13 @@ module.exports = app => {
     
     app.post("ideia/tags", controllerIdeia.add_tags)
 
-    app.put("/ideia/interesse", controllerIdeia.aprova_interesse)
-
     app.put("/ideia", controllerIdeia.altera_dados)
 
     app.put("/ideia/passar", controllerIdeia.passa_ideia)
 
     app.put("/ideia/status", controllerIdeia.muda_status)
+    
+    app.put("/ideia/interesse", controllerIdeia.aprova_interesse)
 
     app.delete("/ideia/remover", controllerIdeia.remove_usuario)
 

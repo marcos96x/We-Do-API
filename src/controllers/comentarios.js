@@ -54,9 +54,8 @@ exports.envia_comentario = (req, res) => {
                             if(rows4[0].id_usuario == id_usuario){
                                 return res.status(200).send({msg: "ok", id_comentario: rows.insertId}).end()
                             }else{
-                                database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 2, '0')", [rows4[0].id_usuario, id_ideia, rows.insertId, msg, link], (err3, rows3, fields3) => {
+                                database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 2, '0', NOW(), ?)", [rows4[0].id_usuario, id_ideia, rows.insertId, msg, link, id_usuario], (err3, rows3, fields3) => {
                                     if(err3){
-                                        console.log(err3)
                                         return res.status(403).send({err: err3}).end()
                                     }else{
                                         return res.status(200).send({msg: "ok", id_comentario: rows.insertId}).end()

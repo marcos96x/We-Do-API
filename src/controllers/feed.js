@@ -56,7 +56,7 @@ exports.interesse = (req, res) => {
                                             let msg = `${rows3[0].nm_usuario} se interessou em uma ideia na qual vc é idealizador`
                                             let link = "http://localhost:5500/perfil_usuario.html?usuario=" + id_usuario
             
-                                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 3, '0')", [rows5[0].id_usuario, id_ideia, rows2.insertId , msg, link], (err4, rows4, fields4) => {
+                                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 3, '0', NOW(), ?)", [rows5[0].id_usuario, id_ideia, rows2.insertId , msg, link, id_usuario], (err4, rows4, fields4) => {
                                                 if(err4){
                                                     console.log(err4)
                                                     return res.status(403).send({err: err4}).end()
@@ -140,7 +140,7 @@ exports.curtida = (req, res) => {
                                         }else{
                                             let msg = `${rows3[0].nm_usuario} curtiu uma ideia na qual vc é idealizador`
                                             let link = "http://localhost:5500/ideia_chat.html?ideia=" + id_ideia
-                                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 1, '0')", [rows4[0].id_usuario, id_ideia, rows2.insertId, msg, link], (err5, rows5, fields5) => {
+                                            database.query("INSERT INTO tb_notificacao VALUES (?, ?, ?, ?, ?, 1, '0', NOW(), ?)", [rows4[0].id_usuario, id_ideia, rows2.insertId, msg, link, id_usuario], (err5, rows5, fields5) => {
                                                 if(err5){
                                                     return res.status(403).send({err: err5}).end()
                                                 }else{

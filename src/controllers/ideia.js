@@ -205,6 +205,60 @@ exports.cria_ideia = (req, res) => {
         }
     })
 }
+/**
+ * Remove um usuário de uma ideia / não aceita o convite do mesmo para entrar para a ideia
+ * 
+ * @param void
+ * 
+ * @body 
+ * "ideia": {
+ *      "id_ideia": <id da ideia>,
+ *      "id_usuario": <id do criador>
+ * },
+ * "usuario": {
+ *      "id_usuario": <id do usuario>
+ * }
+ * 
+ * @return JSON {msg, token} / {err}
+ */
+exports.remove_usuario = (req, res) => {
+
+    let id_usuario = req.body.usuario.id_usuario
+    let id_ideia = req.body.ideia.id_ideia
+    let id_criador = req.body.ideia.id_usuario
+
+    database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_criador, id_ideia], (err2, rows2, fields2) => {
+        if (err2) {
+            res.status(403).send({ err: "Não foi possivel acessar a ideia" }).end()
+        } else {
+            if (rows2.length == 0) {
+                res.status(403).send({ err: "Voce não é o criador da ideia" }).end()
+            } else {
+                database.query("SELECT id_participacao FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ?", [id_usuario, id_ideia], (err, rows, fields) => {
+                    if (err) {
+                        res.status(403).send({ err: "Não foi possivel deletar o participante" }).end()
+                    } else {
+                        id_participacao = rows[0].id_participacao
+                        database.query("DELETE FROM tb_notificacao WHERE id_evento = ?", id_participacao, (err3, rows3, fields3) => {
+                            if(err3){
+                                return res.status(403).send({err: err3}).end()
+                            }else{
+                                database.query("DELETE FROM participante_ideia WHERE id_participacao = ?", id_participacao, (err4, rows4, fields4) => {
+                                    if(err4){
+                                        return res.status(403).send({err: err4}).end()
+                                    }else{
+                                        let newToken = geraToken({ id: id_usuario })
+                                        res.status(200).send({ msg: "OK", token: newToken }).end()
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+            }
+        }
+    })
+}
 
 /**
  * Aprovar pedidos de solicitação para entrar na idéia
@@ -223,10 +277,10 @@ exports.cria_ideia = (req, res) => {
  */
 exports.aprova_interesse = (req, res) => {
 
+    
     let id_usuario = req.body.usuario.id_usuario
     let id_ideia = req.body.ideia.id_ideia
-    let id_criador = req.body.usuario.id_usuario
-
+    let id_criador = req.body.ideia.id_usuario
     database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_criador, id_ideia], (err, rows, fields) => {
         if(err){
             return res.status(403).send({err: err}).end()
@@ -234,7 +288,7 @@ exports.aprova_interesse = (req, res) => {
             if(rows.length == 0){
                 res.status(200).send({msg: "Você não é o idealizador desta ideia!"}).end()
             }else{
-                database.query("SELECT id_participacao FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ?", (id_usuario, id_ideia), (err5, rows5, fields5) => {
+                database.query("SELECT id_participacao FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ?", [id_usuario, id_ideia], (err5, rows5, fields5) => {
                     if(err5){
                         return res.status(403).send({err: err5}).end()
                     }else{
@@ -248,7 +302,8 @@ exports.aprova_interesse = (req, res) => {
                                     }else{
                                         let msg = `${rows4[0].nm_usuario} agora faz parte da sua ideia ${rows4[0].nm_ideia}`
                                         let link = "http://localhost:5500/ideia_chat.html?id_ideia=" + id_ideia
-                                        database.query("UPDATE tb_notificacao SET msg_notificacao = ?, link_notificacao = ? WHERE id_evento = ? AND tp_notificacao = 3", [msg, link, rows5[0].id_participacao], (err3, rows3, fields3) => {
+
+                                        database.query("UPDATE tb_notificacao SET msg_notificacao = ?, link_notificacao = ?, tp_notificacao = 4 WHERE id_evento = ? AND tp_notificacao = 3", [msg, link, rows5[0].id_participacao], (err3, rows3, fields3) => {
                                             if(err3){
                                                 return res.status(403).send({err: err3}).end()
                                             }else{
@@ -262,28 +317,6 @@ exports.aprova_interesse = (req, res) => {
                     }
                 })
                 
-            }
-        }
-    })
-
-
-
-
-    database.query("SELECT * FROM tb_ideia WHERE id_usuario = ? AND id_ideia = ?", [id_criador, id_ideia], (err2, rows2, fields2) => {
-        if (err2) {
-            return res.status(403).send({ err: "Não foi possivel acessar a ideia" }).end()
-        } else {
-            if (rows2.length == 0) {
-                return res.status(403).send({ err: "Voce não é o criador da ideia" }).end()
-            } else {
-                database.query("UPDATE participante_ideia SET status_solicitacao = 1 WHERE id_usuario = ? AND id_ideia = ?", [id_usuario, id_ideia], (err, rows, fields) => {
-                    if (err) {
-                        return res.status(403).send({ err: "Não foi possivel aceitar o participante" }).end()
-                    } else {
-                        let newToken = geraToken({ id: id_criador })
-                        return res.status(200).send({ msg: "OK", token: newToken }).end()
-                    }
-                })
             }
         }
     })
@@ -544,48 +577,6 @@ exports.projetos_atuais = (req, res) => {
                             }
                         })
 
-                    }
-                })
-            }
-        }
-    })
-}
-
-/**
- * Remove um usuário de uma ideia / não aceita o convite do mesmo para entrar para a ideia
- * 
- * @param void
- * 
- * @body 
- * "ideia": {
- *      "id_ideia": <id da ideia>,
- *      "id_criador": <id do criador>
- * },
- * "usuario": {
- *      "id_usuario": <id do usuario>
- * }
- * 
- * @return JSON {msg, token} / {err}
- */
-exports.remove_usuario = (req, res) => {
-
-    let id_usuario = req.body.usuario.id_usuario
-    let id_ideia = req.body.ideia.id_ideia
-    let id_criador = req.body.ideia.id_criador
-
-    database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_criador, id_ideia], (err2, rows2, fields2) => {
-        if (err2) {
-            res.status(403).send({ err: "Não foi possivel acessar a ideia" }).end()
-        } else {
-            if (rows2.length == 0) {
-                res.status(403).send({ err: "Voce não é o criador da ideia" }).end()
-            } else {
-                database.query("DELETE FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ?", [id_usuario, id_ideia], (err, rows, fields) => {
-                    if (err) {
-                        res.status(403).send({ err: "Não foi possivel deletar o participante" }).end()
-                    } else {
-                        let newToken = geraToken({ id: id_usuario })
-                        res.status(200).send({ msg: "OK", token: newToken }).end()
                     }
                 })
             }

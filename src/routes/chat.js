@@ -31,6 +31,18 @@ module.exports = app => {
                 }
             })
         })
+        socket.on("notifications", (dados) => {
+            if(dados.acao == 1){
+                // curtida
+                database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 1", [dados.id_usuario, dados.id_ideia], (err, rows, fields) => {
+                    if(err){
+                        return res.status(403).send({err: err}).end()
+                    }else{
+                        socket.emit("notification", rows[0])
+                    }
+                })
+            }
+        })
         
     })
 
