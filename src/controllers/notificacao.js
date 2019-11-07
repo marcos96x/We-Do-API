@@ -11,6 +11,7 @@ exports.busca_notificacoes = (req, res) => {
 		if(err){
 			return res.status(403).send({err: err}).end()
 		}else{
+			rows = rows.reverse()
 			return res.status(200).send({notificacoes: rows}).end()
 		}
 	})
@@ -19,7 +20,7 @@ exports.busca_notificacoes = (req, res) => {
 exports.muda_notificacoes_para_visualizadas = (req, res) => {
 	let id_usuario = req.params.id_usuario
 
-	database.query("UPDATE tb_notificacoes SET visualizada = '1' WHERE id_usuario = ?", id_usuario, (err, rows, fields) => {
+	database.query("UPDATE tb_notificacao SET visualizada = '1' WHERE id_usuario = ?", id_usuario, (err, rows, fields) => {
 		if(err){
 			return res.status(403).send({err: err}).end()
 		}else{
