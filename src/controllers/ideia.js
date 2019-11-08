@@ -41,7 +41,7 @@ exports.ver_ideia = (req, res) => {
                         if (err3) {
                             return res.status(403).send({ err: err3 }).end()
                         } else {
-                            database.query("SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 3 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND id_ideia = ?", id_ideia, (err4, rows4, fields4) => {
+                            database.query("SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 2 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND id_ideia = ?", id_ideia, (err4, rows4, fields4) => {
                                 if (err4) {
                                     return res.status(403).send({ err: err4 }).end()
                                 } else {
