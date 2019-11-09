@@ -306,6 +306,7 @@ exports.feed = (req, res) => {
                                                                             }
                                                                         }
                                                                     }
+                                                                    ideias_pesquisadas.reverse()
                                                                     let newToken = geraToken({id: id_usuario})
                                                                     return res.status(200).send({
                                                                         ideias: ideias_pesquisadas,
@@ -461,6 +462,7 @@ exports.feed = (req, res) => {
                                                                                     }
                                                                                 }
                                                                             }
+                                                                            ideias_pesquisadas.reverse()
                                                                             let newToken = geraToken({id: id_usuario})
                                                                             return res.status(200).send({
                                                                                 ideias: ideias_pesquisadas,

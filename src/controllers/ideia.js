@@ -51,17 +51,24 @@ exports.ver_ideia = (req, res) => {
                                             return res.status(403).send({ err: "Erro ao buscar quantidade de curtidas" }).end()
                                         } else {
                                             let curtidas = rows5
-
-                                            ideia.tecnologias = rows2
-                                            ideia.membros = rows3
-                                            ideia.comentarios = comentarios
-                                            ideia.curtidas = curtidas
-
-                                            let newToken = geraToken({ id: id_usuario })
-                                            return res.status(200).send({
-                                                ideia: ideia,
-                                                token: newToken
-                                            }).end()
+                                            database.query("SELECT * FROM tb_tag_ideia WHERE id_ideia = ?", id_ideia, (err6, rows6, fields6) => {
+                                                if(err6){
+                                                    return res.status(403).send({err: err6}).end()
+                                                }else{
+                                                    ideia.tecnologias = rows2
+                                                    ideia.membros = rows3
+                                                    ideia.comentarios = comentarios
+                                                    ideia.curtidas = curtidas
+                                                    ideia.tags = rows6
+        
+                                                    let newToken = geraToken({ id: id_usuario })
+                                                    return res.status(200).send({
+                                                        ideia: ideia,
+                                                        token: newToken
+                                                    }).end()
+                                                }
+                                            })
+                                            
                                         }
                                     })
                                 }
@@ -142,23 +149,23 @@ exports.cria_ideia = (req, res) => {
                                 if (err3) {
                                     return res.status(403).send({ err: err3 }).end()
                                 } else {
-                                    database.query("INSERT INTO participante_ideia VALUES (?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
+                                    database.query("INSERT INTO participante_ideia VALUES (default, ?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
                                         if (err4) {
                                             return res.status(403).send({ err: err4 }).end()
                                         } else {
                                             let newToken = geraToken({ id: id_usuario })
-                                            return res.status(200).send({ msg: "Ok", token: newToken }).end()
+                                            return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                                         }
                                     })
                                 }
                             })
                         } else {
-                            database.query("INSERT INTO participante_ideia VALUES (?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
+                            database.query("INSERT INTO participante_ideia VALUES (default, ?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
                                 if (err4) {
                                     return res.status(403).send({ err: err4 }).end()
                                 } else {
                                     let newToken = geraToken({ id: id_usuario })
-                                    return res.status(200).send({ msg: "Ok", token: newToken }).end()
+                                    return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                                 }
                             })
                         }
@@ -179,23 +186,23 @@ exports.cria_ideia = (req, res) => {
                         if (err3) {
                             return res.status(403).send({ err: err3 }).end()
                         } else {
-                            database.query("INSERT INTO participante_ideia VALUES (?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
+                            database.query("INSERT INTO participante_ideia VALUES (default, ?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
                                 if (err4) {
                                     return res.status(403).send({ err: err4 }).end()
                                 } else {
                                     let newToken = geraToken({ id: id_usuario })
-                                    return res.status(200).send({ msg: "Ok", token: newToken }).end()
+                                    return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                                 }
                             })
                         }
                     })
                 } else {
-                    database.query("INSERT INTO participante_ideia VALUES (?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
+                    database.query("INSERT INTO participante_ideia VALUES (default, ?, ?, 1, NOW(), 1);", [id_usuario, id_nova_ideia], (err4, rows4, fields4) => {
                         if (err4) {
                             return res.status(403).send({ err: err4 }).end()
                         } else {
                             let newToken = geraToken({ id: id_usuario })
-                            return res.status(200).send({ msg: "Ok", token: newToken }).end()
+                            return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                         }
                     })
                 }
@@ -592,7 +599,7 @@ exports.projetos_atuais = (req, res) => {
  * @body
  * "ideia": {
  *      "id_ideia": <id da ideia>,
- *      "tags_ideia": [todas as tags que deseja incluir]
+ *      "tag_ideia": [todas as tags que deseja incluir]
  * },
  * "usuario": {
  *      "id_usuario": <id do usuario>
@@ -607,23 +614,27 @@ exports.add_tags = (req, res) => {
 
     database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_usuario, id_ideia], (err, rows, fields) => {
         if (err) {
+
             return res.status(403).send({ err: err }).end()
         } else {
             if (rows[0].length == 0) {
                 return res.status(403).send({ err: "Voce não é o idealizador" }).end()
             } else {
-                let insert
+                let insert = ""
                 for (let i = 0; i < tags_ideia.length; i++) {
                     if (i == tags_ideia.length - 1) {
-                        insert += "(default, " + tags_ideia[i] + ", " + id_ideia + ");"
+                        insert += `(default, "${tags_ideia[i]}", ${id_ideia});`
                     }
                     else {
-                        insert += "(default, " + tags_ideia[i] + ", " + id_ideia + "), "
+                        insert += `(default, "${tags_ideia[i]}", ${id_ideia}), `
                     }
                 }
-                database.query("INSERT INTO tb_tag_ideia VALUES " + insert, (err2, rows2, fields2) => {
+                let sql = "INSERT INTO tb_tag_ideia VALUES " + insert
+                database.query(sql, (err2, rows2, fields2) => {
                     if (err2) {
-                        return res.status(403).send({ err: err }).end()
+
+                    console.log(err2)
+                        return res.status(403).send({ err: err2 }).end()
                     } else {
                         let newToken = geraToken({ id: id_usuario })
                         return res.status(200).send({ msg: "Ok", token: newToken }).end()
@@ -664,7 +675,7 @@ exports.muda_status = (req, res) => {
             } else {
                 database.query("UPDATE tb_ideia SET status_ideia = ? WHERE id_ideia = ?", [status_ideia, id_ideia], (err2, rows2, fields2) => {
                     if (err2) {
-                        return res.status(403).send({ err: err }).end()
+                        return res.status(403).send({ err: err2 }).end()
                     } else {
                         let newToken = geraToken({ id: id_usuario })
                         return res.status(200).send({ msg: "Ok", token: newToken }).end()

@@ -17,7 +17,7 @@ module.exports = app => {
 
     app.post("/ideia", controllerIdeia.cria_ideia)
     
-    app.post("ideia/tags", controllerIdeia.add_tags)
+    app.post("/ideia/tags", controllerIdeia.add_tags)
 
     app.put("/ideia", controllerIdeia.altera_dados)
 

@@ -18,7 +18,8 @@ module.exports = app => {
     var http = require('http').createServer(app);
     var io = require('socket.io')(http);
 
-    io.origins(['http://127.0.0.1:5500']);
+    //io.origins(['http://127.0.0.1:5500']);
+    io.set("origins", "http://127.0.0.1:5500")
 
     io.on('connection', (socket) => {
         socket.on("chat_message", (dados) => {
