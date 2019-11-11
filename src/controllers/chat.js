@@ -38,7 +38,6 @@ exports.recebe_mensagem = (req, res) => {
             return res.status(403).send({err: "Erro na busca das mensagens"}).end()            
         }else{
             let newToken = "Bearer " + geraToken({id: id_usuario})
-            
             return res.status(200).send({
                 chat: rows,
                 token: newToken

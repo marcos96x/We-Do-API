@@ -32,51 +32,56 @@ exports.ver_ideia = (req, res) => {
         if (err) {
             return res.status(403).send({ err: "Não foi possível buscar a ideia" }).end()
         } else {
-            let ideia = rows[0]
-            database.query("SELECT t.id_tecnologia, t.nm_tecnologia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE ti.id_ideia = ?;", [id_ideia], (err2, rows2, fields2) => {
-                if (err2) {
-                    return res.status(403).send({ err: "Não foi possível buscar as tecnologias da ideia" }).end()
-                } else {
-                    database.query("SELECT * FROM membros_ideias WHERE id_ideia = ?", [id_ideia], (err3, rows3, fields3) => {
-                        if (err3) {
-                            return res.status(403).send({ err: err3 }).end()
-                        } else {
-                            database.query("SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 2 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND id_ideia = ?", id_ideia, (err4, rows4, fields4) => {
-                                if (err4) {
-                                    return res.status(403).send({ err: err4 }).end()
-                                } else {
-                                    let comentarios = rows4
-                                    database.query("SELECT * FROM curtida_ideia WHERE id_ideia = ?", id_ideia, (err5, rows5, fields5) => {
-                                        if (err5) {
-                                            return res.status(403).send({ err: "Erro ao buscar quantidade de curtidas" }).end()
-                                        } else {
-                                            let curtidas = rows5
-                                            database.query("SELECT * FROM tb_tag_ideia WHERE id_ideia = ?", id_ideia, (err6, rows6, fields6) => {
-                                                if(err6){
-                                                    return res.status(403).send({err: err6}).end()
-                                                }else{
-                                                    ideia.tecnologias = rows2
-                                                    ideia.membros = rows3
-                                                    ideia.comentarios = comentarios
-                                                    ideia.curtidas = curtidas
-                                                    ideia.tags = rows6
-        
-                                                    let newToken = geraToken({ id: id_usuario })
-                                                    return res.status(200).send({
-                                                        ideia: ideia,
-                                                        token: newToken
-                                                    }).end()
-                                                }
-                                            })
-                                            
-                                        }
-                                    })
-                                }
-                            })
-                        }
-                    })
-                }
-            })
+            if(rows.length == []){
+                return res.status(200).send({msg: "Ideia não encontrada"}).end()
+            }else{
+                let ideia = rows[0]
+                database.query("SELECT t.id_tecnologia, t.nm_tecnologia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE ti.id_ideia = ?;", [id_ideia], (err2, rows2, fields2) => {
+                    if (err2) {
+                        return res.status(403).send({ err: "Não foi possível buscar as tecnologias da ideia" }).end()
+                    } else {
+                        database.query("SELECT * FROM membros_ideias WHERE id_ideia = ?", [id_ideia], (err3, rows3, fields3) => {
+                            if (err3) {
+                                return res.status(403).send({ err: err3 }).end()
+                            } else {
+                                database.query("SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 2 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND id_ideia = ?", id_ideia, (err4, rows4, fields4) => {
+                                    if (err4) {
+                                        return res.status(403).send({ err: err4 }).end()
+                                    } else {
+                                        let comentarios = rows4
+                                        database.query("SELECT * FROM curtida_ideia WHERE id_ideia = ?", id_ideia, (err5, rows5, fields5) => {
+                                            if (err5) {
+                                                return res.status(403).send({ err: "Erro ao buscar quantidade de curtidas" }).end()
+                                            } else {
+                                                let curtidas = rows5
+                                                database.query("SELECT * FROM tb_tag_ideia WHERE id_ideia = ?", id_ideia, (err6, rows6, fields6) => {
+                                                    if(err6){
+                                                        return res.status(403).send({err: err6}).end()
+                                                    }else{
+                                                        ideia.tecnologias = rows2
+                                                        ideia.membros = rows3
+                                                        ideia.comentarios = comentarios
+                                                        ideia.curtidas = curtidas
+                                                        ideia.tags = rows6
+            
+                                                        let newToken = geraToken({ id: id_usuario })
+                                                        return res.status(200).send({
+                                                            ideia: ideia,
+                                                            token: newToken
+                                                        }).end()
+                                                    }
+                                                })
+                                                
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+            }
+            
         }
     })
 }
@@ -401,6 +406,7 @@ exports.deleta_ideia = (req, res) => {
 
     database.query("CALL sp_excluirIdeia(?, ?);", [id_usuario, id_ideia], (err, rows, fields) => {
         if (err) {
+            console.log(err)
             return res.status(403).send({ err: err }).end()
         } else {
             return res.status(200).send({ msg: rows[0][0].msg });
