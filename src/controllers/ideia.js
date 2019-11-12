@@ -552,15 +552,24 @@ exports.projetos_atuais = (req, res) => {
             let count = 0
             let sql = "SELECT * FROM tb_ideia WHERE status_ideia <> 2 AND "
             let sql2 = "SELECT * FROM membros_ideias WHERE "
+            let sql3 = "SELECT t.id_tecnologia, t.nm_tecnologia, ti.id_ideia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE "
+            let sql4 = "SELECT * FROM curtida_ideia WHERE "
+            let sql5 = "SELECT * FROM mensagens WHERE uso_mensagem = 2 AND "
 
             while (count < rows.length) {
                 if (count == rows.length - 1) {
                     sql += "id_ideia = " + rows[count].id_ideia
                     sql2 += "id_ideia = " + rows[count].id_ideia
+                    sql3 += "ti.id_ideia = " + rows[count].id_ideia
+                    sql4 += "id_ideia = " + rows[count].id_ideia
+                    sql5 += "id_ideia = " + rows[count].id_ideia
                 }
                 else {
                     sql += "id_ideia = " + rows[count].id_ideia + " OR "
                     sql2 += "id_ideia = " + rows[count].id_ideia + " OR "
+                    sql3 += "ti.id_ideia = " + rows[count].id_ideia + " OR "
+                    sql4 += "id_ideia = " + rows[count].id_ideia + " OR "
+                    sql5 += "id_ideia = " + rows[count].id_ideia + " OR "
                 }
                 count++
             }
@@ -577,16 +586,60 @@ exports.projetos_atuais = (req, res) => {
                                 return res.status(403).send({ err: err3 }).end()
                             } else {
                                 let membros = rows3
-                                for (let i = 0; i < ideias_atrelado.length; i++) {
-                                    ideias_atrelado[i].membros = []
-                                    for (let i2 = 0; i2 < membros.length; i2++) {
-                                        if (ideias_atrelado[i].id_ideia == membros[i2].id_ideia) {
-                                            ideias_atrelado[i].membros.push(membros[i2])
-                                        }
+                                database.query(sql3, (err4, rows4, fields4) => {
+                                    if(err4){
+                                        return res.status(403).send({err: err4}).end()
+                                    }else{
+                                        let tecnologias = rows4
+                                        database.query(sql4, (err5, rows5, fields5) => {
+                                            if(err5){
+                                                return res.status(403).send({err: err5}).end()
+                                            }else{
+                                                let curtidas = rows5
+                                                database.query(sql5, (err6, rows6, fields6) => {
+                                                    if(err6){
+                                                        return res.status(403).send({err: err6}).end()
+                                                    }else{
+                                                        let comentarios = rows6
+                                                        for (let i = 0; i < ideias_atrelado.length; i++) {
+                                                            ideias_atrelado[i].membros = []
+                                                            ideias_atrelado[i].tecnologias = []
+                                                            ideias_atrelado[i].comentarios = []
+                                                            ideias_atrelado[i].curtidas = []
+                                                            for (let i2 = 0; i2 < membros.length; i2++) {
+                                                                if (ideias_atrelado[i].id_ideia == membros[i2].id_ideia) {
+                                                                    ideias_atrelado[i].membros.push(membros[i2])
+                                                                }
+                                                            }
+                                                            for(let i2 = 0; i2 < tecnologias.length; i2++){
+                                                                if (ideias_atrelado[i].id_ideia == tecnologias[i2].id_ideia) {
+                                                                    ideias_atrelado[i].tecnologias.push(tecnologias[i2])
+                                                                }
+                                                            }
+                                                            for(let i2 = 0; i2 < curtidas.length; i2++){
+                                                                if (ideias_atrelado[i].id_ideia == curtidas[i2].id_ideia) {
+                                                                    ideias_atrelado[i].curtidas.push(curtidas[i2])
+                                                                }
+                                                            }
+                                                            for(let i2 = 0; i2 < comentarios.length; i2++){
+                                                                if (ideias_atrelado[i].id_ideia == comentarios[i2].id_ideia) {
+                                                                    ideias_atrelado[i].comentarios.push(comentarios[i2])
+                                                                }
+                                                            }
+                                                        }
+                        
+                                                        
+                                                        
+                                                        let newToken = geraToken({ id: id_usuario })
+                                                        return res.status(200).send({ ideias: ideias_atrelado, token: newToken }).end()                                                        
+                                                    }
+                                                })      
+                                            }
+                                        })
+
                                     }
-                                }
-                                let newToken = geraToken({ id: id_usuario })
-                                return res.status(200).send({ ideias: ideias_atrelado, token: newToken }).end()
+                                })
+                              
                             }
                         })
 
