@@ -32,9 +32,9 @@ exports.ver_ideia = (req, res) => {
         if (err) {
             return res.status(403).send({ err: "Não foi possível buscar a ideia" }).end()
         } else {
-            if(rows.length == []){
-                return res.status(200).send({msg: "Ideia não encontrada"}).end()
-            }else{
+            if (rows.length == []) {
+                return res.status(200).send({ msg: "Ideia não encontrada" }).end()
+            } else {
                 let ideia = rows[0]
                 database.query("SELECT t.id_tecnologia, t.nm_tecnologia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE ti.id_ideia = ?;", [id_ideia], (err2, rows2, fields2) => {
                     if (err2) {
@@ -55,15 +55,15 @@ exports.ver_ideia = (req, res) => {
                                             } else {
                                                 let curtidas = rows5
                                                 database.query("SELECT * FROM tb_tag_ideia WHERE id_ideia = ?", id_ideia, (err6, rows6, fields6) => {
-                                                    if(err6){
-                                                        return res.status(403).send({err: err6}).end()
-                                                    }else{
+                                                    if (err6) {
+                                                        return res.status(403).send({ err: err6 }).end()
+                                                    } else {
                                                         ideia.tecnologias = rows2
                                                         ideia.membros = rows3
                                                         ideia.comentarios = comentarios
                                                         ideia.curtidas = curtidas
                                                         ideia.tags = rows6
-            
+
                                                         let newToken = geraToken({ id: id_usuario })
                                                         return res.status(200).send({
                                                             ideia: ideia,
@@ -71,7 +71,7 @@ exports.ver_ideia = (req, res) => {
                                                         }).end()
                                                     }
                                                 })
-                                                
+
                                             }
                                         })
                                     }
@@ -81,7 +81,7 @@ exports.ver_ideia = (req, res) => {
                     }
                 })
             }
-            
+
         }
     })
 }
@@ -252,13 +252,13 @@ exports.remove_usuario = (req, res) => {
                     } else {
                         id_participacao = rows[0].id_participacao
                         database.query("DELETE FROM tb_notificacao WHERE id_evento = ?", id_participacao, (err3, rows3, fields3) => {
-                            if(err3){
-                                return res.status(403).send({err: err3}).end()
-                            }else{
+                            if (err3) {
+                                return res.status(403).send({ err: err3 }).end()
+                            } else {
                                 database.query("DELETE FROM participante_ideia WHERE id_participacao = ?", id_participacao, (err4, rows4, fields4) => {
-                                    if(err4){
-                                        return res.status(403).send({err: err4}).end()
-                                    }else{
+                                    if (err4) {
+                                        return res.status(403).send({ err: err4 }).end()
+                                    } else {
                                         let newToken = geraToken({ id: id_usuario })
                                         res.status(200).send({ msg: "OK", token: newToken }).end()
                                     }
@@ -289,46 +289,46 @@ exports.remove_usuario = (req, res) => {
  */
 exports.aprova_interesse = (req, res) => {
 
-    
+
     let id_usuario = req.body.usuario.id_usuario
     let id_ideia = req.body.ideia.id_ideia
     let id_criador = req.body.ideia.id_usuario
     database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_criador, id_ideia], (err, rows, fields) => {
-        if(err){
-            return res.status(403).send({err: err}).end()
-        }else{
-            if(rows.length == 0){
-                res.status(200).send({msg: "Você não é o idealizador desta ideia!"}).end()
-            }else{
+        if (err) {
+            return res.status(403).send({ err: err }).end()
+        } else {
+            if (rows.length == 0) {
+                res.status(200).send({ msg: "Você não é o idealizador desta ideia!" }).end()
+            } else {
                 database.query("SELECT id_participacao FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ?", [id_usuario, id_ideia], (err5, rows5, fields5) => {
-                    if(err5){
-                        return res.status(403).send({err: err5}).end()
-                    }else{
+                    if (err5) {
+                        return res.status(403).send({ err: err5 }).end()
+                    } else {
                         database.query("UPDATE participante_ideia SET status_solicitacao = 1 WHERE id_participacao = ?", rows5[0].id_participacao, (err2, rows2, fields2) => {
-                            if(err2){
-                                return res.status(403).send({err: err2}).end()
-                            }else{
+                            if (err2) {
+                                return res.status(403).send({ err: err2 }).end()
+                            } else {
                                 database.query("SELECT u.nm_usuario, i.nm_ideia FROM tb_usuario u JOIN tb_ideia i ON i.id_ideia = ? WHERE id_usuario = ?", [id_ideia, id_usuario], (err4, rows4, fields4) => {
-                                    if(err4){
-                                        return res.status(403).send({err: err4}).end()
-                                    }else{
+                                    if (err4) {
+                                        return res.status(403).send({ err: err4 }).end()
+                                    } else {
                                         let msg = `${rows4[0].nm_usuario} agora faz parte da sua ideia ${rows4[0].nm_ideia}`
                                         let link = "http://localhost:5500/ideia_chat.html?id_ideia=" + id_ideia
 
                                         database.query("UPDATE tb_notificacao SET msg_notificacao = ?, link_notificacao = ?, tp_notificacao = 4 WHERE id_evento = ? AND tp_notificacao = 3", [msg, link, rows5[0].id_participacao], (err3, rows3, fields3) => {
-                                            if(err3){
-                                                return res.status(403).send({err: err3}).end()
-                                            }else{
-                                                return res.status(200).send({msg: "Ok"}).end()
-                                            }       
+                                            if (err3) {
+                                                return res.status(403).send({ err: err3 }).end()
+                                            } else {
+                                                return res.status(200).send({ msg: "Ok" }).end()
+                                            }
                                         })
                                     }
-                                })                        
+                                })
                             }
                         })
                     }
                 })
-                
+
             }
         }
     })
@@ -505,31 +505,136 @@ exports.portifolio = (req, res) => {
 
     let id_usuario = req.params.id_usuario
 
-    database.query("SELECT id_ideia from participante_ideia WHERE id_usuario = ? AND status_solicitacao = 1", [id_usuario], (err, rows, fields) => {
-        if (err) {
+    database.query("SELECT p.id_ideia from participante_ideia p JOIN tb_ideia i ON p.id_ideia = i.id_ideia WHERE p.id_usuario = ? AND p.status_solicitacao = 1 AND i.status_ideia = 2", [id_usuario], (err7, rows7, fields7) => {
+        if (err7) {
             return res.status(403).send({ err: "Nao foi possivel pesquisar seu portifólio" }).end()
         } else {
-            let count = 0
-            let sql = "SELECT * FROM tb_ideia WHERE status_ideia = 2 AND "
 
-            while (count < rows.length) {
-                if (count == rows.length - 1)
-                    sql += "id_ideia = " + rows[count].id_ideia
-                else
-                    sql += "id_ideia = " + rows[count].id_ideia + " OR "
-                count++
-            }
-            database.query(sql, (err2, rows2, fields2) => {
-                if (err2) {
-                    return res.status(403).send({ err: "Nao foi possivel pesquisar ideias na qual vc participa" }).end()
-                } else {
-                    let ideias_atrelado = rows2
-                    let newToken = geraToken({ id: id_usuario })
-                    return res.status(200).send({ ideias: ideias_atrelado, token: newToken }).end()
+            if(rows7.length != []){
+                let count = 0
+                let sql = "SELECT * FROM tb_ideia WHERE "
+    
+                while (count < rows7.length) {
+                    if (count == rows7.length - 1)
+                        sql += "id_ideia = " + rows7[count].id_ideia
+                    else
+                        sql += "id_ideia = " + rows7[count].id_ideia + " OR "
+                    count++
                 }
-            })
+                database.query(sql, (err, rows, fields) => {
+                    if (err) {
+                        return res.status(403).send({ err: "Não foi possível buscar a ideia" }).end()
+                    } else {
+                        if (rows.length == []) {
+                            return res.status(200).send({ msg: "Não há ideias concluídas" }).end()
+                        } else {
+                            let ideias = rows
+                            count = 0
+                            sql = "SELECT t.id_tecnologia, t.nm_tecnologia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE "
+                            while (count < rows7.length) {
+                                if (count == rows7.length - 1)
+                                    sql += "ti.id_ideia = " + rows7[count].id_ideia
+                                else
+                                    sql += "ti.id_ideia = " + rows7[count].id_ideia + " OR "
+                                count++
+                            }
+                            database.query(sql, (err2, rows2, fields2) => {
+                                if (err2) {
+                                    return res.status(403).send({ err: "Não foi possível buscar as tecnologias da ideia" }).end()
+                                } else {
+                                    let tecnologias = rows2
+                                    sql = "SELECT * FROM membros_ideias WHERE "
+                                    count = 0
+                                    while (count < rows7.length) {
+                                        if (count == rows7.length - 1)
+                                            sql += "id_ideia = " + rows7[count].id_ideia
+                                        else
+                                            sql += "id_ideia = " + rows7[count].id_ideia + " OR "
+                                        count++
+                                    }
+                                    database.query(sql, (err3, rows3, fields3) => {
+                                        if (err3) {
+                                            return res.status(403).send({ err: err3 }).end()
+                                        } else {
+                                            count = 0
+                                            let membros = rows3
+                                            sql = "SELECT m.id_mensagem, m.ct_mensagem, m.id_ideia, u.id_usuario, u.nm_usuario, DATE_ADD(m.hr_mensagem, INTERVAL - 2 HOUR) hr_mensagem FROM tb_mensagem m JOIN tb_usuario u on u.id_usuario = m.id_usuario WHERE uso_mensagem = 2 AND "
+                                            while (count < rows7.length) {
+                                                if (count == rows7.length - 1)
+                                                    sql += "id_ideia = " + rows7[count].id_ideia
+                                                else
+                                                    sql += "id_ideia = " + rows7[count].id_ideia + " OR "
+                                                count++
+                                            }
+                                            database.query(sql, (err4, rows4, fields4) => {
+                                                if (err4) {
+                                                    return res.status(403).send({ err: err4 }).end()
+                                                } else {
+                                                    let comentarios = rows4
+                                                    sql = "SELECT * FROM curtida_ideia WHERE "
+                                                    count = 0
+                                                    while (count < rows7.length) {
+                                                        if (count == rows7.length - 1)
+                                                            sql += "id_ideia = " + rows7[count].id_ideia
+                                                        else
+                                                            sql += "id_ideia = " + rows7[count].id_ideia + " OR "
+                                                        count++
+                                                    }
+                                                    database.query(sql, (err5, rows5, fields5) => {
+                                                        if (err5) {
+                                                            return res.status(403).send({ err: "Erro ao buscar quantidade de curtidas" }).end()
+                                                        } else {
+                                                            let curtidas = rows5
+                                                            for(let i = 0; i < ideias.length; i++){
+                                                                ideias[i].tecnologias = []
+                                                                ideias[i].membros = []
+                                                                ideias[i].comentarios = []
+                                                                ideias[i].curtidas = []
+                                                                for(let i2 = 0; i2 < tecnologias.length; i2++){
+                                                                    if(tecnologias[i2].id_ideia == ideias[i].id_ideia)
+                                                                        ideias[i].tecnologias.push(tecnologias[i2])
+                                                                }
+                                                                for(let i2 = 0; i2 < membros.length; i2++){
+                                                                    if(membros[i2].id_ideia == ideias[i].id_ideia)
+                                                                        ideias[i].membros.push(membros[i2])
+                                                                }
+                                                                for(let i2 = 0; i2 < comentarios.length; i2++){
+                                                                    if(comentarios[i2].id_ideia == ideias[i].id_ideia)
+                                                                        ideias[i].comentarios.push(comentarios[i2])
+                                                                }
+                                                                for(let i2 = 0; i2 < curtidas.length; i2++){
+                                                                    if(curtidas[i2].id_ideia == ideias[i].id_ideia)
+                                                                        ideias[i].curtidas.push(curtidas[i2])
+                                                                }
+                                                            }                   
+    
+                                                            let newToken = geraToken({ id: id_usuario })
+                                                            return res.status(200).send({
+                                                                ideias: ideias,
+                                                                token: newToken
+                                                            }).end()  
+                                                        }
+                                                    })
+                                                }
+                                            })
+                                        }
+                                    })
+                                }
+                            })
+                        }
+    
+                    }
+                })
+            }else{
+                let newToken = geraToken({ id: id_usuario })
+                return res.status(200).send({ideias: [], token: newToken}).end()
+            }
+            
         }
     })
+
+    //---------------------------------
+
 }
 
 /**
@@ -545,12 +650,12 @@ exports.projetos_atuais = (req, res) => {
 
     let id_usuario = req.params.id_usuario
 
-    database.query("SELECT id_ideia from participante_ideia WHERE id_usuario = ? AND status_solicitacao = 1", [id_usuario], (err, rows, fields) => {
+    database.query("SELECT p.id_ideia from participante_ideia p JOIN tb_ideia i ON p.id_ideia = i.id_ideia WHERE p.id_usuario = ? AND p.status_solicitacao = 1 AND i.status_ideia <> 2", [id_usuario], (err, rows, fields) => {
         if (err) {
             return res.status(403).send({ err: "Nao foi possivel pesquisar seu portifólio" }).end()
         } else {
             let count = 0
-            let sql = "SELECT * FROM tb_ideia WHERE status_ideia <> 2 AND "
+            let sql = "SELECT * FROM tb_ideia WHERE "
             let sql2 = "SELECT * FROM membros_ideias WHERE "
             let sql3 = "SELECT t.id_tecnologia, t.nm_tecnologia, ti.id_ideia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE "
             let sql4 = "SELECT * FROM curtida_ideia WHERE "
@@ -587,19 +692,19 @@ exports.projetos_atuais = (req, res) => {
                             } else {
                                 let membros = rows3
                                 database.query(sql3, (err4, rows4, fields4) => {
-                                    if(err4){
-                                        return res.status(403).send({err: err4}).end()
-                                    }else{
+                                    if (err4) {
+                                        return res.status(403).send({ err: err4 }).end()
+                                    } else {
                                         let tecnologias = rows4
                                         database.query(sql4, (err5, rows5, fields5) => {
-                                            if(err5){
-                                                return res.status(403).send({err: err5}).end()
-                                            }else{
+                                            if (err5) {
+                                                return res.status(403).send({ err: err5 }).end()
+                                            } else {
                                                 let curtidas = rows5
                                                 database.query(sql5, (err6, rows6, fields6) => {
-                                                    if(err6){
-                                                        return res.status(403).send({err: err6}).end()
-                                                    }else{
+                                                    if (err6) {
+                                                        return res.status(403).send({ err: err6 }).end()
+                                                    } else {
                                                         let comentarios = rows6
                                                         for (let i = 0; i < ideias_atrelado.length; i++) {
                                                             ideias_atrelado[i].membros = []
@@ -611,35 +716,35 @@ exports.projetos_atuais = (req, res) => {
                                                                     ideias_atrelado[i].membros.push(membros[i2])
                                                                 }
                                                             }
-                                                            for(let i2 = 0; i2 < tecnologias.length; i2++){
+                                                            for (let i2 = 0; i2 < tecnologias.length; i2++) {
                                                                 if (ideias_atrelado[i].id_ideia == tecnologias[i2].id_ideia) {
                                                                     ideias_atrelado[i].tecnologias.push(tecnologias[i2])
                                                                 }
                                                             }
-                                                            for(let i2 = 0; i2 < curtidas.length; i2++){
+                                                            for (let i2 = 0; i2 < curtidas.length; i2++) {
                                                                 if (ideias_atrelado[i].id_ideia == curtidas[i2].id_ideia) {
                                                                     ideias_atrelado[i].curtidas.push(curtidas[i2])
                                                                 }
                                                             }
-                                                            for(let i2 = 0; i2 < comentarios.length; i2++){
+                                                            for (let i2 = 0; i2 < comentarios.length; i2++) {
                                                                 if (ideias_atrelado[i].id_ideia == comentarios[i2].id_ideia) {
                                                                     ideias_atrelado[i].comentarios.push(comentarios[i2])
                                                                 }
                                                             }
                                                         }
-                        
-                                                        
-                                                        
+
+
+
                                                         let newToken = geraToken({ id: id_usuario })
-                                                        return res.status(200).send({ ideias: ideias_atrelado, token: newToken }).end()                                                        
+                                                        return res.status(200).send({ ideias: ideias_atrelado, token: newToken }).end()
                                                     }
-                                                })      
+                                                })
                                             }
                                         })
 
                                     }
                                 })
-                              
+
                             }
                         })
 
@@ -692,7 +797,7 @@ exports.add_tags = (req, res) => {
                 database.query(sql, (err2, rows2, fields2) => {
                     if (err2) {
 
-                    console.log(err2)
+                        console.log(err2)
                         return res.status(403).send({ err: err2 }).end()
                     } else {
                         let newToken = geraToken({ id: id_usuario })

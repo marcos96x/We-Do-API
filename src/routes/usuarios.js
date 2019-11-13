@@ -8,10 +8,8 @@ module.exports = app => {
     app.post("/usuario/login", controllerUsuario.login) 
     app.get("/usuario/recuperar_senha", controllerUsuario.recupera_senha)
     app.post("/usuario/cadastro", controllerUsuario.cadastro)
-
-
-    app.get("/usuario/buscar_perfil/:id_usuario_logado", [authMiddleware.auth, controllerUsuario.busca_perfil]) 
-    app.get("/usuario/perfil/:id_usuario", [authMiddleware.auth, controllerUsuario.perfil])
+ 
+    app.get("/usuario/perfil/:id_usuario&:id_usuario_pesquisado", controllerUsuario.perfil)
 
     app.post("/usuario/denuncia", [authMiddleware.auth, controllerUsuario.denuncia])
 
