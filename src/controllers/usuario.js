@@ -393,9 +393,9 @@ exports.perfil = (req, res) => {
                 if (err2) {
                     return res.status(403).send({ err: err2 }).end()
                 } else {
-                    let tecnologias = rows2
+                    
                     let perfil_usuario = rows[0]
-                    perfil_usuario.tecnologias = tecnologias                    
+                    perfil_usuario.tecnologias = rows2                    
 
                     let newToken = geraToken({ "id": req.params.id_usuario })
                     return res.status(200).send({

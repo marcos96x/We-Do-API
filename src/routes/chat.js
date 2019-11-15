@@ -31,25 +31,27 @@ module.exports = app => {
         socket.on("notification", (dados) => {
             if(dados.acao == 1){
                 // curtida
-                database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 1", [dados.id_usuario, dados.id_ideia], (err, rows, fields) => {
+                database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 1", [Number(dados.id_usuario), dados.id_ideia], (err, rows, fields) => {
                     if(err){
                         return res.status(403).send({err: err}).end()
                     }else{
+                        console.log(rows)
                         io.emit("notification", rows[0])
                     }
                 })
             }else if (dados.acao == 2){
                 // comentario
-                database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 2", [dados.id_usuario, dados.id_ideia], (err, rows, fields) => {
+                database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 2", [Number(dados.id_usuario), dados.id_ideia], (err, rows, fields) => {
                     if(err){
                         return res.status(403).send({err: err}).end()
                     }else{
+                        console.log(rows[0])
                         io.emit("notification", rows[0])
                     }
                 })
             }else if (dados.acao == 3){
                 // solicitação
-                database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 3", [dados.id_usuario, dados.id_ideia], (err, rows, fields) => {
+                database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 3", [Number(dados.id_usuario), dados.id_ideia], (err, rows, fields) => {
                     if(err){
                         return res.status(403).send({err: err}).end()
                     }else{
