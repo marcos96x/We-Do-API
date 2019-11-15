@@ -8,6 +8,7 @@ consign()
     .then("src/middlewares")
     .then("src/controllers")
     .then("src/routes")
+    .then("src/socket")
     .then("/libs/boot.js")
     .into(app)
 

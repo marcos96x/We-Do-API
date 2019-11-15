@@ -276,27 +276,48 @@ exports.recupera_senha = (req, res) => {
  * 
  * @body 
  * "usuario": {
- *      "senha_usuario": "<Nova senha do usuário>"
+ *      "senha_antiga": "<Antiga senha do usuário>",
+ *      "senha_nova": "<nova senha do usuario"
  * }
  * 
  * @return JSON{msg, token} / {err}
  */
 exports.troca_senha = (req, res) => {
 
-    bcrypt.hash(req.body.usuario.senha_usuario, 10, (err, hash) => {
-        if (err) {
-            return res.status(200).send({ err: err }).end()
+    let senha_nova = req.body.usuario.senha_nova
+    let senha_antiga = req.body.usuario.senha_antiga
+    let id_usuario = req.params.id_usuario
+
+    bcrypt.hash(senha_antiga, 10, (errh, hash) => {
+        if (errh) {
+            return res.status(403).send({ err: errh }).end()
         } else {
-            database.query("UPDATE tb_usuario SET senha_usuario = ? WHERE id_usuario = ?", [hash, req.params.id_usuario], (err2, rows, fields) => {
-                if (err2) {
-                    return res.status(200).send({ err: "Erro de update" }).end()
+            database.query("SELECT * FROM tb_usuario WHERE senha_usuario = ? AND id_usuario = ?", [hash, id_usuario], (err, rows, fields) => {
+                if (err) {
+                    return res.status(200).send({ err: err }).end()
                 } else {
-                    // Gera token
-                    let newToken = geraToken({ "id": req.params.id_usuario })
-                    return res.status(200).send({
-                        msg: "Ok",
-                        token: newToken
-                    }).end()
+                    if (rows.length == []) {
+                        return res.status(200).send({ msg: "Senha incorreta!" }).end()
+                    } else {
+                        bcrypt.hash(senha_nova, 10, (errh2, hash2) => {
+                            if (errh2) {
+                                return res.status(403).send({ err: errh2 }).end()
+                            } else {
+                                database.query("UPDATE tb_usuario SET senha_usuario = ? WHERE id_usuario = ?", [hash2, id_usuario], (err2, rows2, fields2) => {
+                                    if (err2) {
+                                        return res.status(403).send({ err: err2 }).end()
+                                    } else {
+                                        // Gera token
+                                        let newToken = geraToken({ "id": id_usuario })
+                                        return res.status(200).send({
+                                            msg: "Ok",
+                                            token: newToken
+                                        }).end()
+                                    }
+                                })
+                            }
+                        })
+                    }
                 }
             })
         }
@@ -385,7 +406,7 @@ exports.denuncia = (req, res) => {
 */
 exports.perfil = (req, res) => {
 
-    database.query("SELECT id_usuario, nm_usuario, email_usuario, ds_bio, tel_usuario FROM tb_usuario WHERE id_usuario = ?", req.params.id_usuario_pesquisado, (err, rows, fields) => {
+    database.query("SELECT id_usuario, nm_usuario, email_usuario, ds_bio, tel_usuario, dt_nascimento FROM tb_usuario WHERE id_usuario = ?", req.params.id_usuario_pesquisado, (err, rows, fields) => {
         if (err) {
             return res.status(403).send({ err: err }).end()
         } else {
@@ -393,9 +414,9 @@ exports.perfil = (req, res) => {
                 if (err2) {
                     return res.status(403).send({ err: err2 }).end()
                 } else {
-                    
+
                     let perfil_usuario = rows[0]
-                    perfil_usuario.tecnologias = rows2                    
+                    perfil_usuario.tecnologias = rows2
 
                     let newToken = geraToken({ "id": req.params.id_usuario })
                     return res.status(200).send({
