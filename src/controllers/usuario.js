@@ -288,26 +288,23 @@ exports.troca_senha = (req, res) => {
     let senha_antiga = req.body.usuario.senha_antiga
     let id_usuario = req.params.id_usuario
 
-    bcrypt.hash(senha_antiga, 10, (errh, hash) => {
-        if (errh) {
-            return res.status(403).send({ err: errh }).end()
-        } else {
-            database.query("SELECT * FROM tb_usuario WHERE senha_usuario = ? AND id_usuario = ?", [hash, id_usuario], (err, rows, fields) => {
-                if (err) {
-                    return res.status(200).send({ err: err }).end()
-                } else {
-                    if (rows.length == []) {
-                        return res.status(200).send({ msg: "Senha incorreta!" }).end()
+    database.query("SELECT * FROM tb_usuario WHERE id_usuario = ?", id_usuario, (err, rows, fields) => {
+        if(err){
+            return res.status(403).send({err: err}).end()
+        }else{
+            bcrypt.compare(senha_antiga, rows[0].senha_usuario)
+                .then((result) => {
+                    if (!result) {
+                        return res.status(200).send({ err: "Senha incorreta! Por favor, tente novamente" }).end()
                     } else {
-                        bcrypt.hash(senha_nova, 10, (errh2, hash2) => {
-                            if (errh2) {
-                                return res.status(403).send({ err: errh2 }).end()
-                            } else {
-                                database.query("UPDATE tb_usuario SET senha_usuario = ? WHERE id_usuario = ?", [hash2, id_usuario], (err2, rows2, fields2) => {
-                                    if (err2) {
-                                        return res.status(403).send({ err: err2 }).end()
-                                    } else {
-                                        // Gera token
+                        bcrypt.hash(senha_nova, 10, (errh, hash) => {
+                            if(errh){
+                                return res.status(402).send({err: errh}).end()
+                            }else{
+                                database.query("UPDATE tb_usuario SET senha_usuario = ? WHERE id_usuario = ?", [hash, id_usuario], (err2, rows2, fields2) => {
+                                    if(err2){
+                                        return res.status(403).send({err: err2}).end()
+                                    }else{
                                         let newToken = geraToken({ "id": id_usuario })
                                         return res.status(200).send({
                                             msg: "Ok",
@@ -316,10 +313,9 @@ exports.troca_senha = (req, res) => {
                                     }
                                 })
                             }
-                        })
+                        })                               
                     }
-                }
-            })
+                });
         }
     })
 }
