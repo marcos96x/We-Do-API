@@ -66,6 +66,58 @@ function envia_email(destinatario, token, nome) {
     });
 }
 
+function envia_email_recupera_senha(destinatario, token, nome) {
+
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        service: "gmail",
+        port: 587,
+        secure: false,
+
+        auth: {
+            user: "wedo.suporte@gmail.com",
+            pass: "tcc2019wedo"
+        },
+        tls: { rejectUnauthorized: false }
+    })
+
+    var handlebars = require('handlebars');
+    var fs = require('fs');
+
+    var readHTMLFile = function (path, callback) {
+        fs.readFile(path, { encoding: 'utf-8' }, function (err, html) {
+            if (err) {
+                throw err;
+                callback(err);
+            }
+            else {
+                callback(null, html);
+            }
+        });
+    };
+    let link = "http://127.0.0.1:5500/recupera_senha.html?token=" + token
+    readHTMLFile(__dirname + '/../../public/email_recupera_senha.html', function (err, html) {
+        var template = handlebars.compile(html);
+        var replacements = {
+            link_token: link
+        };
+        var htmlToSend = template(replacements);
+        var mailOptions = {
+            from: 'wedo.suporte@gmail.com',
+            to: destinatario,
+            subject: 'Recuperar senha - We Do',
+            html: htmlToSend
+        };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                return error
+            } else {
+                return info
+            }
+        });
+    });
+}
+
 exports.valida_conta = (req, res) => {
     let token = req.body.token
     jwt.verify(token, authConfig.secret, (err, decoded) => {
@@ -82,9 +134,18 @@ exports.valida_conta = (req, res) => {
             })
         }
     })
+}
 
-
-
+exports.pega_id_do_token = (req, res) => {
+    let token = req.body.token
+    jwt.verify(token, authConfig.secret, (err, decoded) => {
+        if (err) {
+            res.status(203).send({ err: err }).end()
+        } else {
+            let id_usuario = decoded.id            
+            return res.status(200).send({ id_usuario: id_usuario}).end()                
+        }
+    })
 }
 
 /**
@@ -254,7 +315,7 @@ exports.login = (req, res) => {
 exports.recupera_senha = (req, res) => {
 
     let email = req.body.usuario.email_usuario
-    database.query("SELECT id_usuario FROM tb_usuario WHERE email_usuario = ?", email, (err, rows, fields) => {
+    database.query("SELECT * FROM tb_usuario WHERE email_usuario = ?", email, (err, rows, fields) => {
         if (err) {
             return res.status(200).send({ err: "Erro de busca no email" }).end()
         } else {
@@ -262,9 +323,35 @@ exports.recupera_senha = (req, res) => {
                 return res.status(200).send({ err: "Email não registrado" }).end()
             } else {
                 // envia email                
-                let token = geraToken({ id: rows[0].id_usuario })
-                return res.send("https://wedo.com.br/troca_senha/" + token).end()
+                let newToken = geraToken({ id: rows[0].id_usuario })
+                // envia um email
+                let send = envia_email_recupera_senha(req.body.usuario.email_usuario, newToken, rows[0].nm_usuario)
+                return res.send({msg: "Email enviado! Favor verificar sua caixa de entrada!"}).end()
             }
+        }
+    })
+}
+
+exports.troca_senha_recuperacao = (req, res) => {
+
+    let id_usuario = req.body.usuario.id_usuario
+    let senha_nova = req.body.usuario.senha_nova
+
+    bcrypt.hash(senha_nova, 10, (errh, hash) => {
+        if(errh){
+            return res.status(402).send({err: errh}).end()
+        }else{
+            database.query("UPDATE tb_usuario SET senha_usuario = ? WHERE id_usuario = ?", [hash, id_usuario], (err2, rows2, fields2) => {
+                if(err2){
+                    return res.status(403).send({err: err2}).end()
+                }else{
+                    let newToken = geraToken({ "id": id_usuario })
+                    return res.status(200).send({
+                        msg: "Ok",
+                        token: newToken
+                    }).end()
+                }
+            })
         }
     })
 }
@@ -325,7 +412,7 @@ exports.troca_senha = (req, res) => {
  * 
  * @param id_usuario
  * 
- * @body {usuario}
+ * @body {usuario, tecnologias}
  * 
  * @return JSON {msg} / {err}
  * 
@@ -335,7 +422,34 @@ exports.atualiza_dados = (req, res) => {
         if (err) {
             return res.status(200).send({ err: err }).end()
         } else {
-            return res.status(200).send({ msg: "Ok" }).end()
+            // altera tecnologias
+            database.query("DELETE FROM tecnologia_usuario WHERE id_usuario = ?", req.params.id_usuario, (err2, rows2, fields2) => {
+                if(err2){
+                    return res.status(403).send({err: err2}).end()
+                }else{
+                    if(req.body.tecnologias.length > 0){
+                        let sql = "INSERT INTO tecnologia_usuario VALUES "
+
+                        for(let i = 0; i < req.body.tecnologias.length; i++){
+                            if(i == req.body.tecnologias.length - 1){
+                                sql += `(${req.body.tecnologias[i]}, ${req.params.id_usuario});`
+                            }else{
+                                sql += `(${req.body.tecnologias[i]}, ${req.params.id_usuario}), `
+                            }
+                        }
+
+                        database.query(sql, (err3, rows3, fields3) => {
+                            if(err3){
+                                return res.status(403).send({err: err3}).end()
+                            }else{
+                                return res.status(200).send({ msg: "Dados alterados com sucesso!" }).end()
+                            }
+                        })
+                    }else{
+                        return res.status(200).send({ msg: "Dados alterados com sucesso!" }).end()
+                    }
+                }
+            })
         }
     })
 }
@@ -373,7 +487,7 @@ exports.denuncia = (req, res) => {
                     if (err2) {
                         return res.status(200).send({ err: err2 }).end()
                     } else {
-                        return res.status(200).send({ msg: "Ok" }).end()
+                        return res.status(200).send({ msg: 1 }).end()
                     }
                 })
             } else {
@@ -382,7 +496,7 @@ exports.denuncia = (req, res) => {
                     if (err3) {
                         return res.status(200).send({ err: "Erro na retirada da denuncia" }).end()
                     } else {
-                        return res.status(200).send({ msg: "Ok" }).end()
+                        return res.status(200).send({ msg: 2}).end()
                     }
                 })
             }
@@ -402,7 +516,7 @@ exports.denuncia = (req, res) => {
 */
 exports.perfil = (req, res) => {
 
-    database.query("SELECT id_usuario, nm_usuario, email_usuario, ds_bio, tel_usuario, dt_nascimento FROM tb_usuario WHERE id_usuario = ?", req.params.id_usuario_pesquisado, (err, rows, fields) => {
+    database.query("SELECT id_usuario, nm_usuario, email_usuario, ds_bio, sfMascara_telefone(tel_usuario) tel_usuario, dt_nascimento FROM tb_usuario WHERE id_usuario = ?", req.params.id_usuario_pesquisado, (err, rows, fields) => {
         if (err) {
             return res.status(403).send({ err: err }).end()
         } else {
@@ -440,11 +554,66 @@ exports.perfil = (req, res) => {
 exports.deleta = (req, res) => {
     let id = req.body.usuario.id_usuario
 
-    database.query("CALL spDeleta_usuario(?);", [id], (err, rows, fields) => {
+    // saber quais as ideias na qual o usuario é idealizador
+    database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND idealizador = 1", id, (err, rows, fields) => {
         if (err) {
             return res.status(200).send({ err: err }).end()
         } else {
-            return res.status(200).send({ msg: 'Ok' }).end()
+            let ideias_idealizador = rows
+            if(ideias_idealizador.length > 0){
+                //remove todos os usuarios destas ideias
+                let sql = "DELETE FROM participante_ideia WHERE "
+                for(let i = 0; i < ideias_idealizador.length; i++){
+                    if(i == ideias_idealizador.length - 1){
+                        sql += "id_ideia = " + ideias_idealizador[i].id_ideia
+                    }else{
+                        sql += "id_ideia = " + ideias_idealizador[i].id_ideia + " OR "
+                    }
+                }
+
+                database.query(sql, (err2, rows2, fields2) => {
+                    if(err2){
+                        return res.status(403).send({err: err2}).end()
+                    }else{
+                        sql = "DELETE FROM tb_ideia WHERE "
+                        for(let i = 0; i < ideias_idealizador.length; i++){
+                            if(i == ideias_idealizador.length - 1){
+                                sql += "id_ideia = " + ideias_idealizador[i].id_ideia
+                            }else{
+                                sql += "id_ideia = " + ideias_idealizador[i].id_ideia + " OR "
+                            }
+                        }
+                        database.query(sql, (err3, rows3, fields3) => {
+                            if(err3){
+                                return res.status(403).send({err: err3}).end()
+                            }else{
+                                database.query("CALL spDeleta_usuario(?);", id, (err4, rows4, fields4) => {
+                                    if(err4){
+                                        return res.status(403).send({err: err4}).end()
+                                    }else{
+                                        return res.status(200).send({msg: "Ok"}).end()
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })                
+            }else{
+                database.query("DELETE FROM participante_ideia WHERE id_usuario = ?", id, (err2, rows2, fields2) => {
+                    if(err2){
+                        return res.status(403).send({err: err2}).end()
+                    }else{
+                        database.query("CALL spDeleta_usuario(?);", id, (err3, rows3, fields3) => {
+                            if(err3){
+                                return res.status(403).send({err: err3}).end()
+                            }else{
+                                return res.status(200).send({msg: "Ok"}).end()
+                            }
+                        })
+                    }
+                })
+            }
+           
         }
     })
 }
