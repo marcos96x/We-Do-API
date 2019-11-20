@@ -319,7 +319,7 @@ exports.recupera_senha = (req, res) => {
         if (err) {
             return res.status(200).send({ err: "Erro de busca no email" }).end()
         } else {
-            if (rows == []) {
+            if (rows.length == []) {
                 return res.status(200).send({ err: "Email não registrado" }).end()
             } else {
                 // envia email                

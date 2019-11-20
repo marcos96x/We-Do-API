@@ -530,7 +530,7 @@ exports.portifolio = (req, res) => {
                         } else {
                             let ideias = rows
                             count = 0
-                            sql = "SELECT t.id_tecnologia, t.nm_tecnologia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE "
+                            sql = "SELECT t.id_tecnologia, t.nm_tecnologia, ti.id_ideia FROM tecnologia_ideia AS ti JOIN tb_tecnologia AS t ON t.id_tecnologia = ti.id_tecnologia WHERE "
                             while (count < rows7.length) {
                                 if (count == rows7.length - 1)
                                     sql += "ti.id_ideia = " + rows7[count].id_ideia
