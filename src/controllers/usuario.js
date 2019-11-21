@@ -502,7 +502,42 @@ exports.denuncia = (req, res) => {
             }
         }
     })
+}
 
+/**
+ * Saber se o usuário já denunciou ele
+ * 
+ * @param void
+ * 
+ * @body
+ * "denuncia": {
+ *      "id_usuario_acusador": id,
+ *      "id_usuario_denunciado": id
+ * }
+ * 
+ * @return JSON {msg} / {err}
+ */
+
+exports.pesquisa_denuncia = (req, res) => {
+    let acusador = req.body.denuncia.id_usuario_acusador
+    let denunciado = req.body.denuncia.id_usuario_denunciado
+
+
+    // Saber se ja teve denuncia
+
+    database.query("SELECT * FROM tb_denuncia WHERE id_usuario_acusador = ? AND id_usuario_denunciado = ?", [acusador, denunciado], (err, rows, fields) => {
+        if (err) {
+            return res.status(200).send({ err: "Erro na busca das denuncias" }).end()
+        } else {
+            if (rows.length == []) {
+                // Não tem denuncia              
+                return res.status(200).send({denuncia: false}).end()
+            } else {
+                // Tem denuncia                
+                return res.status(200).send({denuncia: true}).end()
+            }
+        }
+    })
 }
 
 /** 

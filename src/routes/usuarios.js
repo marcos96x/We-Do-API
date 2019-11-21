@@ -12,6 +12,7 @@ module.exports = app => {
     app.get("/usuario/perfil/:id_usuario&:id_usuario_pesquisado", controllerUsuario.perfil)
 
     app.post("/usuario/denuncia", controllerUsuario.denuncia)
+    app.post("/usuario/saber_denuncia", controllerUsuario.pesquisa_denuncia)
 
     app.put("/usuario/alterar/:id_usuario", [controllerUsuario.atualiza_dados])    
     app.put("/usuario/alterar_senha/:id_usuario", controllerUsuario.troca_senha)
