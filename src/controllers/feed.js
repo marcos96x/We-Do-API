@@ -223,7 +223,7 @@ exports.feed = (req, res) => {
                                 }else{
                                     // Caso tenha ideias, pesquisar os usuários que fazem parte destas ideias
                                     // query para pegar participantes
-                                    sql = "SELECT * FROM membros_ideias WHERE status_solicitacao = 1 AND ("                                
+                                    sql = "SELECT * FROM membros_ideias WHERE "                                
                                     // query para pegar quantidade de curtidas
                                     let sql2 = "SELECT id_ideia, id_usuario FROM curtida_ideia WHERE "
                                     // query para pegar os comentarios
@@ -234,7 +234,7 @@ exports.feed = (req, res) => {
                                     count = 0
                                     while(count < ideias_pesquisadas.length){
                                         if(count == ideias_pesquisadas.length - 1){
-                                            sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ")"
+                                            sql += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ""
                                             sql2 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
                                             sql3 += "id_ideia = " + ideias_pesquisadas[count].id_ideia + ")"
                                             sql4 += "id_ideia = " + ideias_pesquisadas[count].id_ideia
