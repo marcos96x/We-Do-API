@@ -211,7 +211,7 @@ exports.feed = (req, res) => {
                     // Insere em tecnologias todas as tecnologias referente ao usuario
                     if(rows.length == []){
                         // exibe o feed com todas as ideias
-                        database.query("SELECT * FROM tb_ideia", (err3, rows3, fields3) => {
+                        database.query("SELECT * FROM tb_ideia WHERE status_ideia <> 2", (err3, rows3, fields3) => {
                             if(err3){
                                 return res.status(403).send({err: err3}).end()
                             }else{
@@ -356,10 +356,10 @@ exports.feed = (req, res) => {
                                 
                                 // Buscar todas as ideias que o usuario prefere 
                                 count = 0
-                                sql = "SELECT * FROM tb_ideia WHERE "
+                                sql = "SELECT * FROM tb_ideia WHERE status_ideia <> 2 AND ("
                                 while(count < ideias.length){
                                     if(count == ideias.length - 1){
-                                        sql += "id_ideia = " + ideias[count]
+                                        sql += "id_ideia = " + ideias[count] + ")"
                                     }else{
                                         sql += "id_ideia = " + ideias[count] + " OR "
                                     }
