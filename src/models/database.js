@@ -2,7 +2,7 @@
 module.exports = app => {
     const host = "localhost";
     const usuario = "root";
-    const senha = "mencholipa14";
+    const senha = "";
     const db = "db_we_do";
     const mysql = require("mysql");
 
