@@ -7,7 +7,7 @@ io.on('connection', (socket) => {
     socket.on("chat_message", (dados) => {
         database.query("CALL spInsere_chat(?, ?, ?)", [dados.id_usuario, dados.id_ideia, dados.ct_mensagem], (err, rows, fields) => {
             if (err) {
-                return res.status(403).send({ err: err }).end()
+                return err
             } else {
                 io.emit("chat_message", dados)
             }
@@ -18,7 +18,7 @@ io.on('connection', (socket) => {
             // curtida
             database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 1", [Number(dados.id_usuario), dados.id_ideia], (err, rows, fields) => {
                 if (err) {
-                    return res.status(403).send({ err: err }).end()
+                    return err
                 } else {
                     io.emit("notification", rows[0])
                 }
@@ -27,7 +27,7 @@ io.on('connection', (socket) => {
             // comentario
             database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 2", [Number(dados.id_usuario), dados.id_ideia], (err, rows, fields) => {
                 if (err) {
-                    return res.status(403).send({ err: err }).end()
+                    return err
                 } else {
                     io.emit("notification", rows[0])
                 }
@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
             // solicitação
             database.query("SELECT * FROM tb_notificacao WHERE id_usuario_acao = ? AND id_ideia = ? AND tp_notificacao = 3", [Number(dados.id_usuario), dados.id_ideia], (err, rows, fields) => {
                 if (err) {
-                    return res.status(403).send({ err: err }).end()
+                    return err
                 } else {
                     io.emit("notification", rows[0])
                 }
@@ -45,7 +45,7 @@ io.on('connection', (socket) => {
             // pessoa foi aceita na ideia
             database.query("SELECT nm_ideia FROM tb_ideia WHERE id_ideia = ?", dados.id_ideia, (err, rows, fields) => {
                 if (err) {
-                    return res.status(403).send({ err: err }).end()
+                    return err
                 } else {
                     dados.nm_ideia = rows[0].nm_ideia
                     io.emit("notification", dados)
