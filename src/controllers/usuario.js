@@ -6,116 +6,11 @@ const database = require("../models/database")()
 const jwt = require("jsonwebtoken")
 const authConfig = require("../../libs/auth")
 const bcrypt = require("bcrypt")
-const nodemailer = require('nodemailer')
 
 function geraToken(params = {}) {
     return jwt.sign(params, authConfig.secret, {
         expiresIn: 86400
     })
-}
-
-function envia_email(destinatario, token, nome) {
-
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        service: "gmail",
-        port: 587,
-        secure: false,
-
-        auth: {
-            user: "wedo.suporte@gmail.com",
-            pass: "tcc2019wedo"
-        },
-        tls: { rejectUnauthorized: false }
-    })
-
-    var handlebars = require('handlebars');
-    var fs = require('fs');
-
-    var readHTMLFile = function (path, callback) {
-        fs.readFile(path, { encoding: 'utf-8' }, function (err, html) {
-            if (err) {
-                throw err;
-                callback(err);
-            }
-            else {
-                callback(null, html);
-            }
-        });
-    };
-    let link = "http://127.0.0.1:5500/index.html?token=" + token
-    readHTMLFile(__dirname + '/../../public/email.html', function (err, html) {
-        var template = handlebars.compile(html);
-        var replacements = {
-            link_token: link
-        };
-        var htmlToSend = template(replacements);
-        var mailOptions = {
-            from: 'wedo.suporte@gmail.com',
-            to: destinatario,
-            subject: 'Verificação de email - We Do',
-            html: htmlToSend
-        };
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                return error
-            } else {
-                return info
-            }
-        });
-    });
-}
-
-function envia_email_recupera_senha(destinatario, token, nome) {
-
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        service: "gmail",
-        port: 587,
-        secure: false,
-
-        auth: {
-            user: "wedo.suporte@gmail.com",
-            pass: "tcc2019wedo"
-        },
-        tls: { rejectUnauthorized: false }
-    })
-
-    var handlebars = require('handlebars');
-    var fs = require('fs');
-
-    var readHTMLFile = function (path, callback) {
-        fs.readFile(path, { encoding: 'utf-8' }, function (err, html) {
-            if (err) {
-                throw err;
-                callback(err);
-            }
-            else {
-                callback(null, html);
-            }
-        });
-    };
-    let link = "http://127.0.0.1:5500/recupera_senha.html?token=" + token
-    readHTMLFile(__dirname + '/../../public/email_recupera_senha.html', function (err, html) {
-        var template = handlebars.compile(html);
-        var replacements = {
-            link_token: link
-        };
-        var htmlToSend = template(replacements);
-        var mailOptions = {
-            from: 'wedo.suporte@gmail.com',
-            to: destinatario,
-            subject: 'Recuperar senha - We Do',
-            html: htmlToSend
-        };
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                return error
-            } else {
-                return info
-            }
-        });
-    });
 }
 
 exports.valida_conta = (req, res) => {
@@ -142,8 +37,8 @@ exports.pega_id_do_token = (req, res) => {
         if (err) {
             res.status(203).send({ err: err }).end()
         } else {
-            let id_usuario = decoded.id            
-            return res.status(200).send({ id_usuario: id_usuario}).end()                
+            let id_usuario = decoded.id
+            return res.status(200).send({ id_usuario: id_usuario }).end()
         }
     })
 }
@@ -191,7 +86,7 @@ exports.cadastro = (req, res) => {
                             "null",
                             "null",
                             "curdate()",
-                            0
+                            1
                         ]
 
                         database.query("INSERT INTO tb_usuario VALUES (" + dados_usuario + ")", (err2, rows2, fields2) => {
@@ -224,7 +119,6 @@ exports.cadastro = (req, res) => {
                                     })
                                 } else {
                                     let newToken = geraToken({ id: rows2.insertId })
-                                    let send = envia_email(req.body.usuario.email_usuario, newToken, req.body.usuario.nm_usuario)
                                     return res.status(200).send({ msg: "Email enviado! Favor confirmar endereço de email!" }).end()
 
 
@@ -269,21 +163,18 @@ exports.login = (req, res) => {
                             if (!result) {
                                 return res.status(200).send({ err: "Senha incorreta! Por favor, tente novamente" }).end()
                             } else {
-                                if (rows[0].status_usuario == 0) {
-                                    return res.status(200).send({ err: "Você precisa verificar seu email!" }).end()
-                                } else {
-                                    //Loga
-                                    let newToken = "Bearer " + geraToken({ "id": rows[0].id_usuario })
+                                //Loga
+                                let newToken = "Bearer " + geraToken({ "id": rows[0].id_usuario })
 
-                                    return res.status(200).send({
-                                        usuario: {
-                                            id_usuario: rows[0].id_usuario,
-                                            nm_usuario: rows[0].nm_usuario,
-                                        },
-                                        token: newToken
-                                    }).end()
+                                return res.status(200).send({
+                                    usuario: {
+                                        id_usuario: rows[0].id_usuario,
+                                        nm_usuario: rows[0].nm_usuario,
+                                    },
+                                    token: newToken
+                                }).end()
 
-                                }
+
                             }
                         });
                 } else {
@@ -299,52 +190,19 @@ exports.login = (req, res) => {
 }
 
 
-/**
- *  Recuperação de senha
- *  Manda email para confirmar alteração de senha no site web
- *  
- * @param void
- * 
- * @body 
- * usuario: {
- *      "email_usuario": "<email do usuario>"
- * }
- * 
- * @return link para troca de email
- */
-exports.recupera_senha = (req, res) => {
-
-    let email = req.body.usuario.email_usuario
-    database.query("SELECT * FROM tb_usuario WHERE email_usuario = ?", email, (err, rows, fields) => {
-        if (err) {
-            return res.status(200).send({ err: "Erro de busca no email" }).end()
-        } else {
-            if (rows.length == []) {
-                return res.status(200).send({ err: "Email não registrado" }).end()
-            } else {
-                // envia email                
-                let newToken = geraToken({ id: rows[0].id_usuario })
-                // envia um email
-                let send = envia_email_recupera_senha(req.body.usuario.email_usuario, newToken, rows[0].nm_usuario)
-                return res.send({msg: "Email enviado! Favor verificar sua caixa de entrada!"}).end()
-            }
-        }
-    })
-}
-
 exports.troca_senha_recuperacao = (req, res) => {
 
     let id_usuario = req.body.usuario.id_usuario
     let senha_nova = req.body.usuario.senha_nova
 
     bcrypt.hash(senha_nova, 10, (errh, hash) => {
-        if(errh){
-            return res.status(402).send({err: errh}).end()
-        }else{
+        if (errh) {
+            return res.status(402).send({ err: errh }).end()
+        } else {
             database.query("UPDATE tb_usuario SET senha_usuario = ? WHERE id_usuario = ?", [hash, id_usuario], (err2, rows2, fields2) => {
-                if(err2){
-                    return res.status(403).send({err: err2}).end()
-                }else{
+                if (err2) {
+                    return res.status(403).send({ err: err2 }).end()
+                } else {
                     let newToken = geraToken({ "id": id_usuario })
                     return res.status(200).send({
                         msg: "Ok",
@@ -376,23 +234,23 @@ exports.troca_senha = (req, res) => {
     let id_usuario = req.params.id_usuario
 
     database.query("SELECT * FROM tb_usuario WHERE id_usuario = ?", id_usuario, (err, rows, fields) => {
-        if(err){
-            return res.status(403).send({err: err}).end()
-        }else{
+        if (err) {
+            return res.status(403).send({ err: err }).end()
+        } else {
             bcrypt.compare(senha_antiga, rows[0].senha_usuario)
                 .then((result) => {
                     if (!result) {
                         return res.status(200).send({ err: "Senha incorreta! Por favor, tente novamente" }).end()
                     } else {
                         bcrypt.hash(senha_nova, 10, (errh, hash) => {
-                            if(errh){
-                                return res.status(402).send({err: errh}).end()
-                            }else{
+                            if (errh) {
+                                return res.status(402).send({ err: errh }).end()
+                            } else {
                                 database.query("UPDATE tb_usuario SET senha_usuario = ? WHERE id_usuario = ?", [hash, id_usuario], (err2, rows2, fields2) => {
-                                    if(err2){
-                                        return res.status(403).send({err: err2}).end()
-                                    }else{
-                                        let newToken = geraToken({ "id": id_usuario })
+                                    if (err2) {
+                                        return res.status(403).send({ err: err2 }).end()
+                                    } else {
+                                        let newToken = "Bearer " + geraToken({ "id": id_usuario })
                                         return res.status(200).send({
                                             msg: "Ok",
                                             token: newToken
@@ -400,7 +258,7 @@ exports.troca_senha = (req, res) => {
                                     }
                                 })
                             }
-                        })                               
+                        })
                     }
                 });
         }
@@ -424,29 +282,33 @@ exports.atualiza_dados = (req, res) => {
         } else {
             // altera tecnologias
             database.query("DELETE FROM tecnologia_usuario WHERE id_usuario = ?", req.params.id_usuario, (err2, rows2, fields2) => {
-                if(err2){
-                    return res.status(403).send({err: err2}).end()
-                }else{
-                    if(req.body.tecnologias.length > 0){
+                if (err2) {
+                    return res.status(403).send({ err: err2 }).end()
+                } else {
+                    if (req.body.tecnologias.length > 0) {
                         let sql = "INSERT INTO tecnologia_usuario VALUES "
 
-                        for(let i = 0; i < req.body.tecnologias.length; i++){
-                            if(i == req.body.tecnologias.length - 1){
+                        for (let i = 0; i < req.body.tecnologias.length; i++) {
+                            if (i == req.body.tecnologias.length - 1) {
                                 sql += `(${req.body.tecnologias[i]}, ${req.params.id_usuario});`
-                            }else{
+                            } else {
                                 sql += `(${req.body.tecnologias[i]}, ${req.params.id_usuario}), `
                             }
                         }
 
-                        database.query(sql, (err3, rows3, fields3) => {
-                            if(err3){
-                                return res.status(403).send({err: err3}).end()
-                            }else{
-                                return res.status(200).send({ msg: "Dados alterados com sucesso!" }).end()
+                        database.query(sql, (err3) => {
+                            if (err3) {
+                                return res.status(403).send({ err: err3 }).end()
+                            } else {
+
+                                let newToken = "Bearer " + geraToken({ "id": req.params.id_usuario })
+                                return res.status(200).send({ msg: "Dados alterados com sucesso!", token: newToken }).end()
                             }
                         })
-                    }else{
-                        return res.status(200).send({ msg: "Dados alterados com sucesso!" }).end()
+                    } else {
+
+                        let newToken = "Bearer " + geraToken({ "id": req.params.id_usuario })
+                        return res.status(200).send({ msg: "Dados alterados com sucesso!", token: newToken }).end()
                     }
                 }
             })
@@ -487,7 +349,9 @@ exports.denuncia = (req, res) => {
                     if (err2) {
                         return res.status(200).send({ err: err2 }).end()
                     } else {
-                        return res.status(200).send({ msg: 1 }).end()
+
+                        let newToken = "Bearer " + geraToken({ "id": id_usuario })
+                        return res.status(200).send({ msg: 1, token: newToken }).end()
                     }
                 })
             } else {
@@ -496,7 +360,9 @@ exports.denuncia = (req, res) => {
                     if (err3) {
                         return res.status(200).send({ err: "Erro na retirada da denuncia" }).end()
                     } else {
-                        return res.status(200).send({ msg: 2}).end()
+
+                        let newToken = "Bearer " + geraToken({ "id": id_usuario })
+                        return res.status(200).send({ msg: 2, token: newToken }).end()
                     }
                 })
             }
@@ -531,10 +397,10 @@ exports.pesquisa_denuncia = (req, res) => {
         } else {
             if (rows.length == []) {
                 // Não tem denuncia              
-                return res.status(200).send({denuncia: false}).end()
+                return res.status(200).send({ denuncia: false }).end()
             } else {
                 // Tem denuncia                
-                return res.status(200).send({denuncia: true}).end()
+                return res.status(200).send({ denuncia: true }).end()
             }
         }
     })
@@ -559,15 +425,18 @@ exports.perfil = (req, res) => {
                 if (err2) {
                     return res.status(403).send({ err: err2 }).end()
                 } else {
-
-                    let perfil_usuario = rows[0]
-                    perfil_usuario.tecnologias = rows2
-
-                    let newToken = geraToken({ "id": req.params.id_usuario })
-                    return res.status(200).send({
-                        perfil_usuario: perfil_usuario,
-                        token: newToken
-                    }).end()
+                    if(rows2.length == 0){
+                        return res.status(404).send({err: "Usuario nao encontrado"}).end()
+                    }else{
+                        let perfil_usuario = rows[0]
+                        perfil_usuario.tecnologias = rows2
+    
+                        let newToken = "Bearer " + geraToken({ "id": req.params.id_usuario })
+                        return res.status(200).send({
+                            perfil_usuario: perfil_usuario,
+                            token: newToken
+                        }).end()
+                    }                    
                 }
             })
         }
@@ -595,60 +464,60 @@ exports.deleta = (req, res) => {
             return res.status(200).send({ err: err }).end()
         } else {
             let ideias_idealizador = rows
-            if(ideias_idealizador.length > 0){
+            if (ideias_idealizador.length > 0) {
                 //remove todos os usuarios destas ideias
                 let sql = "DELETE FROM participante_ideia WHERE "
-                for(let i = 0; i < ideias_idealizador.length; i++){
-                    if(i == ideias_idealizador.length - 1){
+                for (let i = 0; i < ideias_idealizador.length; i++) {
+                    if (i == ideias_idealizador.length - 1) {
                         sql += "id_ideia = " + ideias_idealizador[i].id_ideia
-                    }else{
+                    } else {
                         sql += "id_ideia = " + ideias_idealizador[i].id_ideia + " OR "
                     }
                 }
 
                 database.query(sql, (err2, rows2, fields2) => {
-                    if(err2){
-                        return res.status(403).send({err: err2}).end()
-                    }else{
+                    if (err2) {
+                        return res.status(403).send({ err: err2 }).end()
+                    } else {
                         sql = "DELETE FROM tb_ideia WHERE "
-                        for(let i = 0; i < ideias_idealizador.length; i++){
-                            if(i == ideias_idealizador.length - 1){
+                        for (let i = 0; i < ideias_idealizador.length; i++) {
+                            if (i == ideias_idealizador.length - 1) {
                                 sql += "id_ideia = " + ideias_idealizador[i].id_ideia
-                            }else{
+                            } else {
                                 sql += "id_ideia = " + ideias_idealizador[i].id_ideia + " OR "
                             }
                         }
                         database.query(sql, (err3, rows3, fields3) => {
-                            if(err3){
-                                return res.status(403).send({err: err3}).end()
-                            }else{
+                            if (err3) {
+                                return res.status(403).send({ err: err3 }).end()
+                            } else {
                                 database.query("CALL spDeleta_usuario(?);", id, (err4, rows4, fields4) => {
-                                    if(err4){
-                                        return res.status(403).send({err: err4}).end()
-                                    }else{
-                                        return res.status(200).send({msg: "Ok"}).end()
+                                    if (err4) {
+                                        return res.status(403).send({ err: err4 }).end()
+                                    } else {
+                                        return res.status(200).send({ msg: "Ok" }).end()
                                     }
                                 })
                             }
                         })
                     }
-                })                
-            }else{
+                })
+            } else {
                 database.query("DELETE FROM participante_ideia WHERE id_usuario = ?", id, (err2, rows2, fields2) => {
-                    if(err2){
-                        return res.status(403).send({err: err2}).end()
-                    }else{
+                    if (err2) {
+                        return res.status(403).send({ err: err2 }).end()
+                    } else {
                         database.query("CALL spDeleta_usuario(?);", id, (err3, rows3, fields3) => {
-                            if(err3){
-                                return res.status(403).send({err: err3}).end()
-                            }else{
-                                return res.status(200).send({msg: "Ok"}).end()
+                            if (err3) {
+                                return res.status(403).send({ err: err3 }).end()
+                            } else {
+                                return res.status(200).send({ msg: "Ok" }).end()
                             }
                         })
                     }
                 })
             }
-           
+
         }
     })
 }

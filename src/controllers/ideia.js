@@ -64,7 +64,7 @@ exports.ver_ideia = (req, res) => {
                                                         ideia.curtidas = curtidas
                                                         ideia.tags = rows6
 
-                                                        let newToken = geraToken({ id: id_usuario })
+                                                        let newToken = "Bearer " +  geraToken({ id: id_usuario })
                                                         return res.status(200).send({
                                                             ideia: ideia,
                                                             token: newToken
@@ -158,7 +158,7 @@ exports.cria_ideia = (req, res) => {
                                         if (err4) {
                                             return res.status(403).send({ err: err4 }).end()
                                         } else {
-                                            let newToken = geraToken({ id: id_usuario })
+                                            let newToken = "Bearer " +  geraToken({ id: id_usuario })
                                             return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                                         }
                                     })
@@ -169,7 +169,7 @@ exports.cria_ideia = (req, res) => {
                                 if (err4) {
                                     return res.status(403).send({ err: err4 }).end()
                                 } else {
-                                    let newToken = geraToken({ id: id_usuario })
+                                    let newToken = "Bearer " +  geraToken({ id: id_usuario })
                                     return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                                 }
                             })
@@ -195,7 +195,7 @@ exports.cria_ideia = (req, res) => {
                                 if (err4) {
                                     return res.status(403).send({ err: err4 }).end()
                                 } else {
-                                    let newToken = geraToken({ id: id_usuario })
+                                    let newToken = "Bearer " +  geraToken({ id: id_usuario })
                                     return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                                 }
                             })
@@ -206,7 +206,7 @@ exports.cria_ideia = (req, res) => {
                         if (err4) {
                             return res.status(403).send({ err: err4 }).end()
                         } else {
-                            let newToken = geraToken({ id: id_usuario })
+                            let newToken = "Bearer " + geraToken({ id: id_usuario })
                             return res.status(200).send({ msg: "Ok", id_ideia: rows.insertId, token: newToken }).end()
                         }
                     })
@@ -235,9 +235,9 @@ exports.cria_ideia = (req, res) => {
  */
 exports.remove_usuario = (req, res) => {
 
-    let id_usuario = req.body.usuario.id_usuario
+    let id_usuario = req.body.ideia.id_usuario
     let id_ideia = req.body.ideia.id_ideia
-    let id_criador = req.body.ideia.id_usuario
+    let id_criador = req.body.usuario.id_usuario
 
     database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_criador, id_ideia], (err2, rows2, fields2) => {
         if (err2) {
@@ -259,7 +259,7 @@ exports.remove_usuario = (req, res) => {
                                     if (err4) {
                                         return res.status(403).send({ err: err4 }).end()
                                     } else {
-                                        let newToken = geraToken({ id: id_usuario })
+                                        let newToken = "Bearer " +  geraToken({ id: id_criador })
                                         res.status(200).send({ msg: "OK", token: newToken }).end()
                                     }
                                 })
@@ -290,9 +290,10 @@ exports.remove_usuario = (req, res) => {
 exports.aprova_interesse = (req, res) => {
 
 
-    let id_usuario = req.body.usuario.id_usuario
+    let id_criador = req.body.usuario.id_usuario
     let id_ideia = req.body.ideia.id_ideia
-    let id_criador = req.body.ideia.id_usuario
+    let id_usuario = req.body.ideia.id_usuario
+
     database.query("SELECT * FROM participante_ideia WHERE id_usuario = ? AND id_ideia = ? AND idealizador = 1", [id_criador, id_ideia], (err, rows, fields) => {
         if (err) {
             return res.status(403).send({ err: err }).end()
@@ -370,7 +371,7 @@ exports.altera_dados = (req, res) => {
                         if (err) {
                             return res.status(200).send({ err: "Erro ao alterar dados da ideia" }).end()
                         } else {
-                            let newToken = geraToken({ id: id_usuario })
+                            let newToken = "Bearer " +  geraToken({ id: id_usuario })
                             return res.status(200).send({ msg: "OK", token: newToken }).end()
                         }
                     })
@@ -452,7 +453,7 @@ exports.passa_ideia = (req, res) => {
                             if (err3) {
                                 return res.status(403).send({ err: err3 }).end()
                             } else {
-                                let newToken = geraToken({ id: id_usuario })
+                                let newToken = "Bearer " +  geraToken({ id: id_usuario })
                                 return res.status(200).send({ msg: "Ok", token: newToken }).end()
                             }
                         })
@@ -486,7 +487,7 @@ exports.sair_ideia = (req, res) => {
         if (err) {
             return res.status(403).send({ err: err }).end()
         } else {
-            let newToken = geraToken({ id: id_usuario })
+            let newToken = "Bearer " +  geraToken({ id: id_usuario })
             return res.status(200).send({ msg: "Ok", token: newToken })
         }
     })
@@ -608,7 +609,7 @@ exports.portifolio = (req, res) => {
                                                                 }
                                                             }                   
     
-                                                            let newToken = geraToken({ id: id_usuario })
+                                                            let newToken = "Bearer " +  geraToken({ id: id_usuario })
                                                             return res.status(200).send({
                                                                 ideias: ideias,
                                                                 token: newToken
@@ -626,7 +627,7 @@ exports.portifolio = (req, res) => {
                     }
                 })
             }else{
-                let newToken = geraToken({ id: id_usuario })
+                let newToken = "Bearer " +  geraToken({ id: id_usuario })
                 return res.status(200).send({ideias: [], token: newToken}).end()
             }
             
@@ -735,7 +736,7 @@ exports.projetos_atuais = (req, res) => {
 
 
 
-                                                        let newToken = geraToken({ id: id_usuario })
+                                                        let newToken = "Bearer " +  geraToken({ id: id_usuario })
                                                         return res.status(200).send({ ideias: ideias_atrelado, token: newToken }).end()
                                                     }
                                                 })
@@ -800,7 +801,7 @@ exports.add_tags = (req, res) => {
                         console.log(err2)
                         return res.status(403).send({ err: err2 }).end()
                     } else {
-                        let newToken = geraToken({ id: id_usuario })
+                        let newToken = "Bearer " +  geraToken({ id: id_usuario })
                         return res.status(200).send({ msg: "Ok", token: newToken }).end()
                     }
                 })
@@ -841,7 +842,7 @@ exports.muda_status = (req, res) => {
                     if (err2) {
                         return res.status(403).send({ err: err2 }).end()
                     } else {
-                        let newToken = geraToken({ id: id_usuario })
+                        let newToken = "Bearer " +  geraToken({ id: id_usuario })
                         return res.status(200).send({ msg: "Ok", token: newToken }).end()
                     }
                 })

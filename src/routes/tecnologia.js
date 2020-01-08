@@ -7,9 +7,9 @@ module.exports = app => {
 
     app.get("/tecnologia", controllerTecnologia.busca_tecnologia)
 
-    app.post("/tecnologia/usuario", [controllerTecnologia.tecnologia_usuario])
+    app.post("/tecnologia/usuario", [authMiddleware.auth, controllerTecnologia.tecnologia_usuario])
     
-    app.post("/tecnologia/ideia", [controllerTecnologia.tecnologia_ideia])
+    app.post("/tecnologia/ideia", [authMiddleware.auth, controllerTecnologia.tecnologia_ideia])
 
  
 }

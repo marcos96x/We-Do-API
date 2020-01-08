@@ -61,7 +61,8 @@ exports.interesse = (req, res) => {
                                                     console.log(err4)
                                                     return res.status(403).send({err: err4}).end()
                                                 }else{
-                                                    return res.status(200).send({msg: "ok"}).end()
+                                                    let newToken = "Bearer " +  geraToken({ "id": id_usuario })
+                                                    return res.status(200).send({msg: "ok",token: newToken}).end()
                                                 }
                                             })
                                         }                                        
@@ -85,7 +86,7 @@ exports.interesse = (req, res) => {
                                     if(err4){
                                         return res.status(403).send({err: err4}).end()
                                     }else{
-                                        let newToken = geraToken({id: id_usuario})
+                                        let newToken = "Bearer " +  geraToken({id: id_usuario})
                                         return res.status(200).send({msg: "Cancelou", token: newToken}).end()
                                     }
                                 })
@@ -144,7 +145,9 @@ exports.curtida = (req, res) => {
                                                 if(err5){
                                                     return res.status(403).send({err: err5}).end()
                                                 }else{
-                                                    return res.status(200).send({msg: "ok"}).end()
+
+                                                    let newToken = "Bearer " +  geraToken({ "id": id_usuario })
+                                                    return res.status(200).send({msg: "ok", token: newToken}).end()
                                                 }
                                             })
                                         }                                        
@@ -168,7 +171,7 @@ exports.curtida = (req, res) => {
                                     if(err3){
                                         return res.status(403).send({err: err3}).end()
                                     }else{
-                                        let newToken = geraToken({id: id_usuario})
+                                        let newToken = "Bearer " +  geraToken({id: id_usuario})
                                         return res.status(200).send({msg: "descurtiu", token: newToken}).end()
                                     }
                                 })
@@ -307,7 +310,7 @@ exports.feed = (req, res) => {
                                                                         }
                                                                     }
                                                                     ideias_pesquisadas.reverse()
-                                                                    let newToken = geraToken({id: id_usuario})
+                                                                    let newToken = "Bearer " +  geraToken({id: id_usuario})
                                                                     return res.status(200).send({
                                                                         ideias: ideias_pesquisadas,
                                                                         token: newToken
@@ -463,7 +466,7 @@ exports.feed = (req, res) => {
                                                                                 }
                                                                             }
                                                                             ideias_pesquisadas.reverse()
-                                                                            let newToken = geraToken({id: id_usuario})
+                                                                            let newToken = "Bearer " +  geraToken({id: id_usuario})
                                                                             return res.status(200).send({
                                                                                 ideias: ideias_pesquisadas,
                                                                                 token: newToken
@@ -562,42 +565,51 @@ exports.top_ideias = (req, res) => {
                                 ideia1.nm_ideia = rows3[0].nm_ideia
                                 ideia1.ds_ideia = rows3[0].ds_ideia
                                 ideia1.nm_idealizador = rows3[0].nm_idealizador
+                                ideia1.id_idealizador = rows3[0].id_idealizador
                             }else if (rows3[0].id_ideia == ideia2.id_ideia){
                                 ideia2.nm_ideia = rows3[0].nm_ideia
                                 ideia2.ds_ideia = rows3[0].ds_ideia
                                 ideia2.nm_idealizador = rows3[0].nm_idealizador
+                                ideia2.id_idealizador = rows3[0].id_idealizador
                             }else{
                                 ideia3.nm_ideia = rows3[0].nm_ideia
                                 ideia3.ds_ideia = rows3[0].ds_ideia
                                 ideia3.nm_idealizador = rows3[0].nm_idealizador
+                                ideia3.id_idealizador = rows3[0].id_idealizador
                             }
 
                             if(rows3[1].id_ideia == ideia1.id_ideia){
                                 ideia1.nm_ideia = rows3[1].nm_ideia
                                 ideia1.ds_ideia = rows3[1].ds_ideia
                                 ideia1.nm_idealizador = rows3[1].nm_idealizador
+                                ideia1.id_idealizador = rows3[1].id_idealizador
                             }else if (rows3[1].id_ideia == ideia2.id_ideia){
                                 ideia2.nm_ideia = rows3[1].nm_ideia
                                 ideia2.ds_ideia = rows3[1].ds_ideia
                                 ideia2.nm_idealizador = rows3[1].nm_idealizador
+                                ideia2.id_idealizador = rows3[1].id_idealizador
                             }else{
                                 ideia3.nm_ideia = rows3[1].nm_ideia
                                 ideia3.ds_ideia = rows3[1].ds_ideia
                                 ideia3.nm_idealizador = rows3[1].nm_idealizador
+                                ideia3.id_idealizador = rows3[1].id_idealizador
                             }
 
                             if(rows3[2].id_ideia == ideia1.id_ideia){
                                 ideia1.nm_ideia = rows3[2].nm_ideia
                                 ideia1.ds_ideia = rows3[2].ds_ideia
                                 ideia1.nm_idealizador = rows3[2].nm_idealizador
+                                ideia1.id_idealizador = rows3[2].id_idealizador
                             }else if (rows3[2].id_ideia == ideia2.id_ideia){
                                 ideia2.nm_ideia = rows3[2].nm_ideia
                                 ideia2.ds_ideia = rows3[2].ds_ideia
                                 ideia2.nm_idealizador = rows3[2].nm_idealizador
+                                ideia2.id_idealizador = rows3[2].id_idealizador
                             }else{
                                 ideia3.nm_ideia = rows3[2].nm_ideia
                                 ideia3.ds_ideia = rows3[2].ds_ideia
                                 ideia3.nm_idealizador = rows3[2].nm_idealizador
+                                ideia3.id_idealizador = rows3[2].id_idealizador
                             }
                 
                             ideia1.membros = []
