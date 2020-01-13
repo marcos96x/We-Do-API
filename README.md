@@ -10,10 +10,10 @@ Para utilizar essa versão pública você deve executar alguns passos:
 
 Você deve instalar as seguintes ferramentas:
 
-- Node JS
-- NPM
-- Mysql
-- Algum servidor local (wamp, xampp, live server, usbwebserver, etc)
+- [Node JS](https://nodejs.org/en/)
+- [NPM](https://www.npmjs.com/)
+- [Mysql](https://www.mysql.com/)
+- Algum servidor local ([WampServer](http://www.wampserver.com/en/), [xampp](https://www.apachefriends.org/pt_br/download.html), [live server(Plugin do vscode)](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer), [usbwebserver](https://www.usbwebserver.net/webserver/), etc)
 
 2. Realizar o download da base de dados do sistema We Do  
 
