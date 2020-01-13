@@ -48,4 +48,4 @@ Com isso, a API está rodando em seu sistema, sendo possível ver a utilização
 
 Caso ocorra algum erro, certifique de que as configurações do banco de dados no arquivo src/models/database.js estão corretas conforme sua utilização.  
 
-#### Para mais detalhes, consulte nossa [documentação oficial](https://google.com).
+#### Para mais detalhes, consulte nossa [documentação oficial](https://github.com/MariaCarolinaa/documentacaoWeDo).
