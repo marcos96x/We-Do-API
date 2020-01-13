@@ -2,7 +2,7 @@
 
 # We Do - API  
 
-API desenvolvida exclusivamente pro sistema We Do, de forma que os dados são servidos de forma assincrona tanto para o [sistema web](https://github.com/marcos96x/We-Do-Client) quanto para o [sistema mobile](https://github.com/Luuck4s/We-Do-Mobile).  
+API desenvolvida exclusivamente pro sistema We Do, de forma que os dados são servidos de forma assíncrona tanto para o [sistema web](https://github.com/marcos96x/We-Do-Client) quanto para o [sistema mobile](https://github.com/Luuck4s/We-Do-Mobile).  
 
 Para utilizar essa versão pública você deve executar alguns passos: 
 
@@ -10,10 +10,10 @@ Para utilizar essa versão pública você deve executar alguns passos:
 
 Você deve instalar as seguintes ferramentas:
 
-- [Node JS](https://nodejs.org/en/)
-- [NPM](https://www.npmjs.com/)
-- [Mysql](https://www.mysql.com/)
-- Algum servidor local ([WampServer](http://www.wampserver.com/en/), [xampp](https://www.apachefriends.org/pt_br/download.html), [live server(Plugin do vscode)](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer), [usbwebserver](https://www.usbwebserver.net/webserver/), etc)
+- [Node JS](https://nodejs.org/en/);
+- [NPM](https://www.npmjs.com/);
+- [Mysql](https://www.mysql.com/);
+- Algum servidor local ([WampServer](http://www.wampserver.com/en/), [xampp](https://www.apachefriends.org/pt_br/download.html), [live server(Plugin do vscode)](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer), [usbwebserver](https://www.usbwebserver.net/webserver/) etc)
 
 2. Realizar o download da base de dados do sistema We Do  
 
@@ -25,7 +25,7 @@ Para baixar o client web basta fazer o download do repositório do [We Do Client
 
 4. Ligar o servidor da API  
 
-Abra o terminal ou cmd com o diretório apontado para a pasta raiz da API e instale as dependências que o sistema utiliza com o seguinte comando:  
+Abra o terminal ou cmd com o diretório apontado para a pasta raíz da API e instale as dependências que o sistema utiliza com o seguinte comando:  
 
 ```
 npm install --save
