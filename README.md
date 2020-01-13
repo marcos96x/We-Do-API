@@ -1,4 +1,4 @@
-![](https://github.com/marcos96x/We-Do-Client/blob/master/img/we-do2.jpeg)  
+![](https://github.com/marcos96x/We-Do-Client/blob/master/img/we-do.jpeg)  
 
 # We Do - API  
 
