@@ -13,7 +13,7 @@ Você deve instalar as seguintes ferramentas:
 - [Node JS](https://nodejs.org/en/);
 - [NPM](https://www.npmjs.com/);
 - [Mysql](https://www.mysql.com/);
-- Algum servidor local ([WampServer](http://www.wampserver.com/en/), [xampp](https://www.apachefriends.org/pt_br/download.html), [live server(Plugin do vscode)](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer), [usbwebserver](https://www.usbwebserver.net/webserver/) etc)
+- Algum servidor local ([WampServer](http://www.wampserver.com/en/), [xampp](https://www.apachefriends.org/pt_br/download.html), [live server(Plugin do vscode)](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer), [usbwebserver](https://www.usbwebserver.net/webserver/) etc).
 
 2. Realizar o download da base de dados do sistema We Do  
 
@@ -48,4 +48,4 @@ Com isso, a API está rodando em seu sistema, sendo possível ver a utilização
 
 Caso ocorra algum erro, certifique de que as configurações do banco de dados no arquivo src/models/database.js estão corretas conforme sua utilização.  
 
-#### Para mais detalhes, consulte nossa [documentação oficial](https://google.com)
+#### Para mais detalhes, consulte nossa [documentação oficial](https://google.com).
